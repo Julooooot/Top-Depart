@@ -1,0 +1,1767 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Top Départ'ement : le jeu quotidien de culture géographique. Complète la grille avec les départements français !">
+<!-- Open Graph (WhatsApp, Facebook, LinkedIn) -->
+<meta property="og:title" content="Top Départ'ement — Le jeu quotidien des départements">
+<meta property="og:description" content="Trouve les départements qui croisent les bons critères et tente le sans-faute !">
+<meta property="og:image" content="https://ton-site.fr/apercu.png">
+<meta property="og:type" content="website">
+
+<!-- Import de la police Space Grotesk -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>">
+<!-- Import de D3.js pour la carte -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #acc9ec;
+    color: #1a1a2e;
+    min-height: 100vh;
+    padding: 1.5rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+  }
+
+  /* ── EN-TÊTE EN HAUT À GAUCHE ── */
+  .header-wrap {
+    width: 100%;
+    max-width: 1200px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 0.5rem;
+  }
+
+  .header-nav {
+    display: flex;
+    gap: 12px;
+    font-size: 0.88rem;
+    font-weight: 700;
+  }
+
+  .nav-btn {
+    background: none;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.2s;
+    padding: 0;
+  }
+
+  .nav-btn:hover {
+    color: #3949ab;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #0f172a; /* Bleu très foncé */
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+
+  .title-red {
+    color: #dc2626; /* Rouge */
+  }
+
+  .today-date {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #475569;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+
+  /* ── BANDEAU DU SCORE GLOBAL ── */
+  .score-badge {
+    background: #ffffff;
+    border: 2px solid #cbd5e1;
+    border-radius: 20px;
+    padding: 6px 18px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e293b;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .score-val {
+    color: #2e7d32;
+    font-size: 1.25rem;
+    transition: transform 0.2s;
+  }
+
+  /* ── BARRE DE RECHERCHE CENTRÉE ── */
+  .search-section {
+    width: 100%;
+    max-width: 530px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    z-index: 100;
+  }
+
+  .search-bar { width: 100%; position: relative; }
+  .search-hint {
+    font-size: 0.95rem;
+    color: #64748b;
+    text-align: center;
+    min-height: 1.2em;
+    transition: color 0.2s;
+  }
+  .search-hint.active { color: #3949ab; font-weight: 700; }
+  .search-input-wrap { position: relative; }
+  #search {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 1rem;
+    font-family: inherit;
+    border: 2px solid #cbd5e1;
+    border-radius: 12px;
+    outline: none;
+    background: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  #search:focus {
+    border-color: #3949ab;
+    box-shadow: 0 0 0 3px rgba(57,73,171,0.15);
+  }
+  #search:disabled {
+    background: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
+  }
+
+  .suggestions {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+    z-index: 200;
+    max-height: 220px;
+    overflow-y: auto;
+    display: none;
+  }
+  .suggestions.open { display: block; }
+  .sug-item {
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    color: #1e293b;
+  }
+  .sug-item:hover, .sug-item.selected { background: #f0f3ff; }
+  .sug-item mark { background: none; color: #3949ab; font-weight: 700; }
+
+  .mistake-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #64748b;
+  }
+  .dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .dot.used { background: #ef4444; border-color: #dc2626; }
+
+  /* ── MISE EN PAGE 2 COLONNES ALIGNÉES ── */
+  .main-layout {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2.5rem;
+    width: 100%;
+    max-width: 1200px;
+  }
+
+  .left-pane {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: 530px;
+    flex-shrink: 0;
+  }
+
+  .right-pane {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 530px;
+    height: 530px;
+    flex-shrink: 0;
+    background: #fff;
+    border-radius: 20px;
+    padding: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+  }
+
+  /* ── GRILLE ── */
+  .grid-wrap {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+  table {
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 8px;
+    background: #fff;
+    border-radius: 20px;
+    padding: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+    width: 530px;
+    height: 530px;
+  }
+  th, td {
+    width: 120px;
+    height: 120px;
+    min-width: 120px;
+    max-width: 120px;
+    min-height: 120px;
+    max-height: 120px;
+    text-align: center;
+    vertical-align: middle;
+    border-radius: 14px;
+    box-sizing: border-box;
+  }
+  thead th {
+    background: #94a3b8;
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 8px;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+  thead th:first-child { background: transparent; }
+  tbody th {
+    background: #94a3b8;
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 8px;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  tbody td {
+    background: #f1f5f9;
+    border: 2px solid #cbd5e1;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, transform 0.1s;
+    position: relative;
+    padding: 6px;
+  }
+  tbody td:hover { background: #e2e8f0; }
+  td.selected {
+    background: #e0e7ff;
+    border: 2px solid #3949ab;
+    box-shadow: 0 0 0 4px rgba(57,73,171,0.2);
+  }
+  td.filled {
+    animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background: #abd1ae;
+    border-color: #2e4f31;
+    cursor: default;
+  }
+  td.wrong {
+    animation: shake 0.4s ease;
+    background: #ef4444;
+    border-color: #b91c1c;
+  }
+
+  td.game-over-clickable { cursor: pointer !important; }
+  td.game-over-clickable:hover { filter: brightness(0.95); }
+
+  /* ── RÉPONSE + SCORE/POURCENTAGE ── */
+  .cell-answer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    color: #1b5e20;
+  }
+  .cell-answer-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.15;
+    word-break: break-word;
+  }
+  .cell-answer-details {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .cell-answer-pct {
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: rgba(0, 0, 0, 0.08);
+    padding: 1px 5px;
+    border-radius: 6px;
+  }
+  .cell-answer-pts {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #1b5e20;
+    background: rgba(255, 255, 255, 0.6);
+    padding: 1px 5px;
+    border-radius: 6px;
+  }
+  .cell-placeholder {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #94a3b8;
+  }
+
+  @keyframes pop {
+    0% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+
+  /* ── CARTE SVG ── */
+  #map-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .dept {
+    fill: #e2e8f0;
+    stroke: #ffffff;
+    stroke-width: 0.8px;
+    transition: fill 0.3s ease;
+  }
+  .dept:hover { fill: #cbd5e1; }
+  .dept.correct { 
+    fill: #2e7d32 !important; 
+    cursor: pointer;
+  }
+  .dept.correct:hover {
+    fill: #1b5e20 !important;
+  }
+  .dept.wrong { fill: #ef4444 !important; }
+
+  /* ── TOOLTIP CARTE ── */
+  .map-tooltip {
+    position: absolute;
+    display: none;
+    pointer-events: none;
+    background: #1e293b;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+    transform: translate(-50%, -120%);
+    white-space: nowrap;
+    z-index: 1000;
+  }
+
+  /* ── MODALS ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(3px);
+    z-index: 500;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 20px 45px rgba(0,0,0,0.22);
+    padding: 1.8rem;
+    max-width: 480px;
+    width: 90%;
+    position: relative;
+    animation: popModal 0.2s ease-out;
+    max-height: 85vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+
+  .modal::-webkit-scrollbar {
+    width: 6px;
+  }
+  .modal::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .modal::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 6px;
+  }
+  .modal::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+  }
+
+  @keyframes popModal {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .modal-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #64748b;
+    margin-bottom: 0.3rem;
+  }
+  .modal-cats {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.8rem;
+    line-height: 1.4;
+  }
+  .modal-cats span {
+    display: inline-block;
+    background: #f1f5f9;
+    color: #334155;
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 0.85rem;
+  }
+  .modal-subtitle {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-bottom: 0.6rem;
+  }
+  .modal-answers {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 4px 0;
+  }
+  .answer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 6px 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+  .answer-row.chosen {
+    background: #e8f5e9;
+    border-color: #81c784;
+    color: #1b5e20;
+  }
+  .answer-row-right {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .answer-row-pct {
+    font-weight: 700;
+    color: #475569;
+    font-size: 0.88rem;
+  }
+  .answer-row-pts {
+    font-weight: 800;
+    color: #2e7d32;
+    background: #e8f5e9;
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+  }
+  .answer-row.chosen .answer-row-pct { color: #2e7d32; }
+
+  .modal-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 1.35rem;
+    color: #94a3b8;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .modal-count {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 0.8rem;
+    text-align: right;
+  }
+  .game-over-hint {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #3949ab;
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  /* ── MODAL RECAP FIN DE PARTIE ── */
+  .recap-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 1rem 0;
+  }
+  .recap-stat-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px 6px;
+    text-align: center;
+  }
+  .recap-stat-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 4px;
+  }
+  .recap-stat-val {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #1e293b;
+  }
+  .recap-stat-val.highlight {
+    color: #2e7d32;
+  }
+  .recap-bonus {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 6px 10px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 0.8rem;
+  }
+  .recap-bonus strong {
+    color: #2e7d32;
+  }
+  .recap-rarest {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 12px;
+    padding: 10px 14px;
+    text-align: center;
+    font-size: 0.98rem;
+    color: #166534;
+    margin-bottom: 1.2rem;
+  }
+
+  /* ── BOUTONS ACTIONS ── */
+  .recap-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .btn-share {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    background: #2e7d32;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .btn-share:hover { background: #1b5e20; }
+  .btn-share:active { transform: scale(0.98); }
+
+  .btn-secondary {
+    width: 100%;
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 10px;
+    font-size: 0.98rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .btn-secondary:hover { background: #e2e8f0; }
+
+  .rules-content {
+    font-size: 0.95rem;
+    color: #334155;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.8rem;
+    margin-bottom: 1.4rem;
+  }
+  .rules-item { display: flex; gap: 10px; align-items: flex-start; }
+  .btn-start {
+    display: block;
+    width: 100%;
+    background: #3949ab;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .btn-start:hover { background: #283593; }
+  .btn-start:active { transform: scale(0.98); }
+
+  @media (max-width: 1100px) {
+    .main-layout { flex-direction: column; }
+    .left-pane, .right-pane { width: 100%; max-width: 530px; height: auto; }
+    table { width: 100%; height: auto; }
+    #map-svg { aspect-ratio: 1 / 1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TITRE, LIENS ET DATE EN HAUT À GAUCHE -->
+<div class="header-wrap">
+  <div class="header-nav">
+    <button class="nav-btn" id="btnOpenRules">Règles</button>
+    <span style="color: #cbd5e1;">•</span>
+    <button class="nav-btn" id="btnOpenAbout">En savoir plus</button>
+    <span style="color: #cbd5e1;">•</span>
+    <button class="nav-btn" id="btnOpenLegal">Mentions légales</button>
+  </div>
+  <h1>Top Départ'<span class="title-red">ement</span></h1>
+  <div class="today-date" id="todayDate"></div>
+</div>
+
+<!-- AFFICHAGE DU SCORE GLOBAL -->
+<div class="score-badge">
+  <span>Score total :</span>
+  <span class="score-val" id="totalScore">0</span>
+  <span>/ 1000</span>
+</div>
+
+<!-- BARRE DE RECHERCHE CENTRÉE -->
+<div class="search-section">
+  <div class="search-bar">
+    <p class="search-hint" id="hint">Clique sur une case de la grille pour jouer</p>
+    <div class="search-input-wrap">
+      <input type="text" id="search" placeholder="Tapez au moins 3 lettres…" disabled autocomplete="off">
+      <div class="suggestions" id="suggestions"></div>
+    </div>
+  </div>
+
+  <div class="mistake-row">
+    <span>Erreurs</span>
+    <span class="dot" id="d0"></span>
+    <span class="dot" id="d1"></span>
+    <span class="dot" id="d2"></span>
+    <span class="dot" id="d3"></span>
+    <span class="dot" id="d4"></span>
+  </div>
+</div>
+
+<div class="main-layout">
+  <!-- COLONNE GAUCHE : GRILLE -->
+  <div class="left-pane">
+    <div class="grid-wrap">
+      <table id="grid"></table>
+    </div>
+  </div>
+
+  <!-- COLONNE DROITE : CARTE -->
+  <div class="right-pane">
+    <svg id="map-svg" viewBox="0 0 500 500"></svg>
+    <div id="mapTooltip" class="map-tooltip"></div>
+  </div>
+</div>
+
+<!-- POP-UP CONSIGNES / RÈGLES -->
+<div class="modal-overlay open" id="rulesModal">
+  <div class="modal">
+    <button class="modal-close" id="btnCloseRulesCross">✕</button>
+    <div class="modal-title">Règles de Top Départe (ment)</div>
+    <h2 style="font-size: 1.3rem; margin-bottom: 0.4rem; color: #1a1a2e;">Comment jouer ?</h2>
+    
+    <div class="rules-content">
+      <div class="rules-item">
+        <span>- <strong>Le but du jeu : Remplir les cases de la grille.</strong> Chacune d'elle peut être validée par un <strong>département</strong> qui coche <strong>simultanément</strong> le critère de sa ligne et de sa colonne.</span>
+      </div>
+      <div class="rules-item">
+        <span>- <strong>Score sur 1 000 pts :</strong> chaque case vaut jusqu'à <strong>100 pts</strong> (900 pts au total sur la grille). Plus votre département a un faible pourcentage de réponse, plus vous marquez de points !</span>
+      </div>
+      <div class="rules-item">
+        <span>- <strong>Bonus de perfection :</strong> terminer la grille accorde un bonus de <strong>+100 pts</strong>. Chaque erreur commise réduit ce bonus de <strong>20 pts</strong>.</span>
+      </div>
+      <div class="rules-item">
+        <span>- Chaque département ne peut être utilisé qu'<strong>une seule fois</strong> par partie.</span>
+      </div>
+      <div class="rules-item">
+        <span>- <strong>5 erreurs</strong> maximum ! À la fin, cliquez sur les cases pour consulter toutes les réponses possibles.</span>
+      </div>
+      <div class="rules-item">
+        <span>- Chaque jour, une nouvelle grille est disponible.</span>
+      </div>
+      <div class="rules-item">
+        <span><strong>Bonne chance !</strong></span>
+      </div>
+    </div>
+
+    <button class="btn-start" id="btnStartGame">C'est parti !</button>
+  </div>
+</div>
+
+<!-- POP-UP EN SAVOIR PLUS -->
+<div class="modal-overlay" id="aboutModal">
+  <div class="modal">
+    <button class="modal-close" id="btnCloseAboutCross">✕</button>
+    <div class="modal-title">À propos du projet</div>
+    <h2 style="font-size: 1.3rem; margin-bottom: 0.6rem; color: #1a1a2e;">En savoir plus</h2>
+    
+    <div class="rules-content">
+      <p><strong>Top Départ'ement</strong> est un jeu quotidien de culture géographique inspiré des grilles de croisement d'indices.</p>
+      <p>Le jeu peut comporter des imprécisions ou des erreurs malgrés les nombreuses vérifications de notre part (Errare Umanum Est). Vous pouvez faire remonter ces erreurs mais également vos idées pour améliorer <strong>Top Départ'ement</strong> à Topdepartement@gmail.com</p>
+      <p style="font-size: 0.85rem; color: #64748b;">Données basées sur les découpages administratifs métropolitains ouverts.</p>
+    </div>
+    
+    <h2 style="font-size: 1.3rem; margin-bottom: 0.6rem; color: #1a1a2e;">Comprendre l'absence de la Corse et des territoires ultramarins</h2>
+    
+    <div class="rules-content">
+      <p><strong>Top Départ'ement</strong> se concentre pour l'instant exclusivement sur la France continentale. En raison de leurs spécificités géographiques, la Corse et les DROM-COM rendent certains règles de croisement difficle voire impossible à équilibrer avec les départements du continent.</p>
+      <p>Ce choix répond également à la cohérence d'un futur projet autour de nos territoires et de mobilités bien précises... restez à l'affût !</p>
+    </div>
+
+    <button class="btn-secondary" id="btnCloseAbout">Fermer</button>
+  </div>
+</div>
+
+<!-- POP-UP MENTIONS LÉGALES -->
+<div class="modal-overlay" id="legalModal">
+  <div class="modal">
+    <button class="modal-close" id="btnCloseLegalCross">✕</button>
+    <div class="modal-title">Informations légales</div>
+    <h2 style="font-size: 1.3rem; margin-bottom: 0.6rem; color: #1a1a2e;">Mentions légales</h2>
+    
+    <div class="rules-content">
+      <p><strong>Édition du site :</strong> Projet personnel non professionnel et à but non lucratif, créé à des fins de divertissement et de découverte du territoire. Conformément à l'article 1-1 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN), l'éditeur, personne physique agissant à titre non professionnel, a communiqué ses coordonnées à son hébergeur et conserve son anonymat vis-à-vis du public.</p>
+      <p><strong>Contact:</strong> Topdepartement@gmail.com</p>
+      <p><strong>Hébergement :</strong> Ce site est hébergé conformément aux dispositions de la loi pour la confiance dans l'économie numérique (LCEN).</p>
+      <p><strong>Données personnelles & Cookies :</strong> Le jeu ne collecte aucune donnée personnelle et n'utilise aucun cookie tiers.</p>
+      <p><strong>Propriété intellectuelle :</strong> Le code source, le concept, le nom « Top Départ'ement » et les éléments graphiques sont protégés par le droit d'auteur et ne peuvent être reproduits, distribués ou réutilisés sans autorisation préalable de l'éditeur. Les données géographiques et administratives utilisées sont issues de ressources publiques en Open Data (IGN / data.gouv.fr).</p>
+      <p><strong>Responsabilité :</strong> Malgré le soin apporté, le jeu peut comporter des imprécisions dans les données affichées. L'éditeur ne saurait être tenu responsable d'éventuelles erreurs ou de l'indisponibilité temporaire du service.</p>
+    </div>
+
+    <button class="btn-secondary" id="btnCloseLegal">Fermer</button>
+  </div>
+</div>
+
+<!-- POP-UP RÉCAPITULATIF FIN DE PARTIE -->
+<div class="modal-overlay" id="endGameModal">
+  <div class="modal" style="text-align: center;">
+    <div class="modal-title" id="endGameSubtitle">Partie terminée</div>
+    <h2 style="font-size: 1.4rem; margin-bottom: 0.5rem;" id="endGameTitle">Résultats du jour</h2>
+    
+    <div class="recap-stats">
+      <div class="recap-stat-card">
+        <div class="recap-stat-label">Score</div>
+        <div class="recap-stat-val highlight" id="endScore">0 / 1000</div>
+      </div>
+      <div class="recap-stat-card">
+        <div class="recap-stat-label">Trouvés</div>
+        <div class="recap-stat-val" id="endFound">0 / 9</div>
+      </div>
+      <div class="recap-stat-card">
+        <div class="recap-stat-label">Erreurs</div>
+        <div class="recap-stat-val" id="endMistakes">0 / 5</div>
+      </div>
+    </div>
+
+    <div class="recap-bonus" id="endBonusBox">
+      Bonus grille complète : <strong id="endBonusVal">+0 pt</strong>
+    </div>
+
+    <div class="recap-rarest" id="endRarestBox">
+      Coup le plus rare : <strong id="endRarest">Aucun</strong>
+    </div>
+
+    <div class="recap-btns">
+      <button class="btn-share" id="btnShare">Copier / Partager mon score</button>
+      <button class="btn-secondary" id="btnFreePlayTrigger" style="display: none;">Continuer à jouer (sans score)</button>
+      <button class="btn-secondary" onclick="document.getElementById('endGameModal').classList.remove('open')">Explorer la grille</button>
+    </div>
+  </div>
+</div>
+
+<!-- POP-UP CONFIRMATION CONTINUER À JOUER -->
+<div class="modal-overlay" id="freePlayModal">
+  <div class="modal" style="text-align: center;">
+    <div class="modal-title">Mode détente</div>
+    <h2 style="font-size: 1.3rem; margin-bottom: 0.6rem; color: #1a1a2e;">Continuer pour le plaisir</h2>
+    <div class="rules-content">
+      <p>Votre score officiel du jour est déjà enregistré.</p>
+      <p>Vous pouvez maintenant continuer à remplir les cases restantes pour le plaisir : les nouvelles réponses ne rapporteront <strong>aucun point</strong> et les erreurs ne seront <strong>plus comptabilisées</strong>.</p>
+    </div>
+    <button class="btn-start" id="btnConfirmFreePlay">Jouer sans score</button>
+  </div>
+</div>
+
+<!-- MODAL RÉPONSES (AU CLIC APRÈS FIN DE PARTIE) -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-title">Réponses possibles</div>
+    <div class="modal-cats" id="modalCats"></div>
+    <div class="modal-subtitle" id="modalSubtitle"></div>
+    <div class="modal-answers" id="modalAnswers"></div>
+    <div class="modal-count" id="modalCount"></div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// 1. DONNÉES
+// ─────────────────────────────────────────────
+const CATEGORIES = [
+  { id: "fleuve",           label: "A un fleuve dans son nom" },
+  { id: "montagne",         label: "A une montagne dans son nom" },
+  { id: "multiple5",        label: "Numéro multiple de 5" },
+  { id: "cotier",           label: "Est côtier" },
+  { id: "frontalier",       label: "Est frontalier" },
+  { id: "plus4voisins",     label: "A plus de 4 départements limitrophes" },
+  { id: "sup6000km2",       label: "Superficie supérieure à 6 000 km²" },
+  { id: "inf3500km2",       label: "Superficie inférieure à 3 500 km²" },
+  { id: "pop1M",            label: "Population supérieure à 1 million" },
+  { id: "pop500k",          label: "Population inférieure à 500 000" },
+  { id: "sansE",            label: "Ne contient pas la lettre E" },
+  { id: "voyelle",          label: "Commence par une voyelle" },
+  { id: "sans100villes",    label: "Sans grande ville (top 100)" },
+  { id: "moins300Clermont", label: "À moins de 300 km de Clermont-Ferrand" },
+  { id: "plus300Clermont",  label: "À plus de 300 km de Clermont-Ferrand"},
+  { id: "zoneL",            label: "Faisait partie de la zone Libre en 1941" },
+  { id: "zoneO",            label: "Faisait partie de la zone Occupée en 1941"},
+  { id: "voteMacron2022",   label: "A voté Macron au second tour des élections présidentielles de 2022 "},
+  { id: "voteLepen2022",     label: "A voté Lepen au second tour des élections présidentielles de 2022" },
+  { id: "genreMasc",        label: "Est au masculin" },
+  { id: "genreFem",         label: "Est au féminin " },
+  { id: "motCarafe",        label: "Où l'on utilise le mot Carafe " },
+  { id: "motPichet",        label: "Où l'on utilise le mot Pichet " },
+  { id: "motCruche",        label: "Où l'on utilise le mot Cruche " },
+  { id: "motPotDeau",       label: "Où l'on utilise le mot Pot d'eau " },
+  { id: "asterixVisite",    label: "Visité par Asterix lors de ses aventures" },
+  { id: "zenith",           label: "Possède une salle de spectacle Zénith" },
+  { id: "plusNordVancouver",label: "Est plus au nord que Vancouver" },
+  { id: "clubL1L2",         label: "A une équipe en Ligue 1 ou Ligue 2" },
+  { id: "reg_ARA", label: "En région Auvergne-Rhône-Alpes" },
+  { id: "reg_BFC", label: "En région Bourgogne-Franche-Comté" },
+  { id: "reg_BRE", label: "En région Bretagne" },
+  { id: "reg_CVL", label: "En région Centre-Val de Loire" },
+  { id: "reg_GE",  label: "En région Grand Est" },
+  { id: "reg_HDF", label: "En région Hauts-de-France" },
+  { id: "reg_IDF", label: "En région Île-de-France" },
+  { id: "reg_NOR", label: "En région Normandie" },
+  { id: "reg_NAQ", label: "En région Nouvelle-Aquitaine" },
+  { id: "reg_OCC", label: "En région Occitanie" },
+  { id: "reg_PDL", label: "En région Pays de la Loire" },
+  { id: "reg_PAC", label: "En région Provence-Alpes-Côte d'Azur" },
+];
+
+const REGION_VERS_ID = {
+  "Auvergne-Rhône-Alpes":        "reg_ARA",
+  "Bourgogne-Franche-Comté":     "reg_BFC",
+  "Bretagne":                    "reg_BRE",
+  "Centre-Val de Loire":         "reg_CVL",
+  "Grand Est":                   "reg_GE",
+  "Hauts-de-France":             "reg_HDF",
+  "Île-de-France":               "reg_IDF",
+  "Normandie":                   "reg_NOR",
+  "Nouvelle-Aquitaine":          "reg_NAQ",
+  "Occitanie":                   "reg_OCC",
+  "Pays de la Loire":            "reg_PDL",
+  "Provence-Alpes-Côte d'Azur":  "reg_PAC",
+};
+
+const DEPARTEMENTS = [
+  { num:"01", nom:"Ain",                     region:"Auvergne-Rhône-Alpes",        cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:true,  plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:false, sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:true,  asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"02", nom:"Aisne",                   region:"Hauts-de-France",             cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:true,  plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:false, voteLepen2022:true,  genreMasc:false, genreFem:true,  motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:true,  clubL1L2:false } },
+  { num:"03", nom:"Allier",                  region:"Auvergne-Rhône-Alpes",        cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"04", nom:"Alpes-de-Haute-Provence", region:"Provence-Alpes-Côte d'Azur",  cats:{ fleuve:false, montagne:true,  multiple5:false, cotier:false, frontalier:true,  plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:false, voteLepen2022:true,  genreMasc:false, genreFem:true,  motCarafe:false, motPichet:false, motCruche:false, motPotDeau:true,  asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"05", nom:"Hautes-Alpes",            region:"Provence-Alpes-Côte d'Azur",  cats:{ fleuve:false, montagne:true,  multiple5:true,  cotier:false, frontalier:true,  plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:false, motCruche:false, motPotDeau:true,  asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"06", nom:"Alpes-Maritimes",        region:"Provence-Alpes-Côte d'Azur",  cats:{ fleuve:false, montagne:true,  multiple5:false, cotier:true,  frontalier:true,  plus4voisins:false, sup6000km2:false, inf3500km2:false, pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:true,  zenith:false, plusNordVancouver:false, clubL1L2:true  } },
+  { num:"07", nom:"Ardèche",                region:"Auvergne-Rhône-Alpes",        cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:false, motCruche:false, motPotDeau:true,  asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"08", nom:"Ardennes",                region:"Grand Est",                   cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:true,  plus4voisins:false, sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:false, voteLepen2022:true,  genreMasc:false, genreFem:true,  motCarafe:false, motPichet:false, motCruche:true,  motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:true,  clubL1L2:false } },
+  { num:"09", nom:"Ariège",                  region:"Occitanie",                   cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:true,  plus4voisins:false, sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:false, plus300Clermont:true,  zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"10", nom:"Aube",                    region:"Grand Est",                   cats:{ fleuve:false, montagne:false, multiple5:true,  cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:false, moins300Clermont:true,  plus300Clermont:false, zoneL:false, zoneO:true,  voteMacron2022:false, voteLepen2022:true,  genreMasc:false, genreFem:true,  motCarafe:false, motPichet:false, motCruche:true,  motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:true  } },
+  { num:"11", nom:"Aude",                    region:"Occitanie",                   cats:{ fleuve:false, montagne:false, multiple5:false, cotier:true,  frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:false, voteLepen2022:true,  genreMasc:false, genreFem:true,  motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"12", nom:"Aveyron",                 region:"Occitanie",                   cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:true  } },
+  { num:"13", nom:"Bouches-du-Rhône",       region:"Provence-Alpes-Côte d'Azur",  cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:true,  frontalier:false, plus4voisins:false, sup6000km2:false, inf3500km2:false, pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:false, motCruche:false, motPotDeau:true,  asterixVisite:true,  zenith:false, plusNordVancouver:false, clubL1L2:true  } },
+  { num:"14", nom:"Calvados",                region:"Normandie",                   cats:{ fleuve:false, montagne:false, multiple5:false, cotier:true,  frontalier:false, plus4voisins:false, sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:true,  plusNordVancouver:true,  clubL1L2:true  } },
+  { num:"15", nom:"Cantal",                  region:"Auvergne-Rhône-Alpes",        cats:{ fleuve:false, montagne:true,  multiple5:true,  cotier:false, frontalier:false, plus4voisins:false, sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"16", nom:"Charente",                region:"Nouvelle-Aquitaine",          cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"17", nom:"Charente-Maritime",      region:"Nouvelle-Aquitaine",          cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:true,  frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"18", nom:"Cher",                    region:"Centre-Val de Loire",         cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:false, moins300Clermont:true,  plus300Clermont:false, zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"19", nom:"Corrèze",                 region:"Nouvelle-Aquitaine",          cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"21", nom:"Côte-d'Or",              region:"Bourgogne-Franche-Comté",     cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:true,  plus300Clermont:false, zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:false, motCruche:false, motPotDeau:true,  asterixVisite:false, zenith:true,  plusNordVancouver:false, clubL1L2:false } },
+  { num:"22", nom:"Côtes-d'Armor",          region:"Bretagne",                    cats:{ fleuve:false, montagne:false, multiple5:false, cotier:true,  frontalier:false, plus4voisins:false, sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:true,  zenith:false, plusNordVancouver:false, clubL1L2:true  } },
+  { num:"23", nom:"Creuse",                  region:"Nouvelle-Aquitaine",          cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"24", nom:"Dordogne",                region:"Nouvelle-Aquitaine",          cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"25", nom:"Doubs",                   region:"Bourgogne-Franche-Comté",     cats:{ fleuve:false, montagne:false, multiple5:true,  cotier:false, frontalier:true,  plus4voisins:false, sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:false, motPichet:false, motCruche:true,  motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"26", nom:"Drôme",                   region:"Auvergne-Rhône-Alpes",        cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:false, motCruche:false, motPotDeau:true,  asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"27", nom:"Eure",                    region:"Normandie",                   cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:true,  motPichet:false, motCruche:true,  motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"28", nom:"Eure-et-Loir",            region:"Centre-Val de Loire",         cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"29", nom:"Finistère",               region:"Bretagne",                    cats:{ fleuve:false, montagne:false, multiple5:false, cotier:true,  frontalier:false, plus4voisins:false, sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:true  } },
+  { num:"30", nom:"Gard",                    region:"Occitanie",                   cats:{ fleuve:false, montagne:false, multiple5:true,  cotier:true,  frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:false, voteLepen2022:true,  genreMasc:true,  genreFem:false, motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"31", nom:"Haute-Garonne",           region:"Occitanie",                   cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:false, frontalier:true,  plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:true,  zenith:true,  plusNordVancouver:false, clubL1L2:true  } },
+  { num:"32", nom:"Gers",                    region:"Occitanie",                   cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:false, plus300Clermont:true,  zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"33", nom:"Gironde",                 region:"Nouvelle-Aquitaine",          cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:true,  frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:true,  zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"34", nom:"Hérault",                 region:"Occitanie",                   cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:true,  frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:false, voteLepen2022:true,  genreMasc:true,  genreFem:false, motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:true,  plusNordVancouver:false, clubL1L2:true  } },
+  { num:"35", nom:"Ille-et-Vilaine",        region:"Bretagne",                    cats:{ fleuve:false, montagne:false, multiple5:true,  cotier:true,  frontalier:false, plus4voisins:false, sup6000km2:true,  inf3500km2:false, pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:true,  zenith:false, plusNordVancouver:false, clubL1L2:true  } },
+  { num:"36", nom:"Indre",                   region:"Centre-Val de Loire",         cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"37", nom:"Indre-et-Loire",          region:"Centre-Val de Loire",         cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:true,  plus300Clermont:false, zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"38", nom:"Isère",                   region:"Auvergne-Rhône-Alpes",        cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:false, motCruche:false, motPotDeau:true,  asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:true  } },
+  { num:"39", nom:"Jura",                    region:"Bourgogne-Franche-Comté",     cats:{ fleuve:false, montagne:true,  multiple5:false, cotier:false, frontalier:true,  plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:false, motPichet:false, motCruche:false, motPotDeau:true,  asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"40", nom:"Landes",                  region:"Nouvelle-Aquitaine",          cats:{ fleuve:false, montagne:false, multiple5:true,  cotier:true,  frontalier:false, plus4voisins:false, sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"41", nom:"Loir-et-Cher",            region:"Centre-Val de Loire",         cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"42", nom:"Loire",                   region:"Auvergne-Rhône-Alpes",        cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:false, motCruche:false, motPotDeau:true,  asterixVisite:false, zenith:true,  plusNordVancouver:false, clubL1L2:true  } },
+  { num:"43", nom:"Haute-Loire",             region:"Auvergne-Rhône-Alpes",        cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"44", nom:"Loire-Atlantique",        region:"Pays de la Loire",            cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:true,  frontalier:false, plus4voisins:false, sup6000km2:true,  inf3500km2:false, pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:true,  plusNordVancouver:false, clubL1L2:true  } },
+  { num:"45", nom:"Loiret",                  region:"Centre-Val de Loire",         cats:{ fleuve:false, montagne:false, multiple5:true,  cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:true,  plus300Clermont:false, zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"46", nom:"Lot",                     region:"Occitanie",                   cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"47", nom:"Lot-et-Garonne",          region:"Nouvelle-Aquitaine",          cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:true,  zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"48", nom:"Lozère",                  region:"Occitanie",                   cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"49", nom:"Maine-et-Loire",          region:"Pays de la Loire",            cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:true  } },
+  { num:"50", nom:"Manche",                  region:"Normandie",                   cats:{ fleuve:false, montagne:false, multiple5:true,  cotier:true,  frontalier:false, plus4voisins:false, sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:true,  clubL1L2:false } },
+  { num:"51", nom:"Marne",                   region:"Grand Est",                   cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:false, motCruche:true,  motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:true,  clubL1L2:true  } },
+  { num:"52", nom:"Haute-Marne",             region:"Grand Est",                   cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:false, zoneO:true,  voteMacron2022:false, voteLepen2022:true,  genreMasc:false, genreFem:true,  motCarafe:false, motPichet:false, motCruche:true,  motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"53", nom:"Mayenne",                 region:"Pays de la Loire",            cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:true  } },
+  { num:"54", nom:"Meurthe-et-Moselle",     region:"Grand Est",                   cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:true,  plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:false, motCruche:true,  motPotDeau:false, asterixVisite:false, zenith:true,  plusNordVancouver:true,  clubL1L2:true  } },
+  { num:"55", nom:"Meuse",                   region:"Grand Est",                   cats:{ fleuve:true,  montagne:false, multiple5:true,  cotier:false, frontalier:true,  plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:false, voteLepen2022:true,  genreMasc:false, genreFem:true,  motCarafe:false, motPichet:false, motCruche:true,  motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:true,  clubL1L2:false } },
+  { num:"56", nom:"Morbihan",                region:"Bretagne",                    cats:{ fleuve:false, montagne:false, multiple5:false, cotier:true,  frontalier:false, plus4voisins:false, sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:true,  zenith:false, plusNordVancouver:false, clubL1L2:true  } },
+  { num:"57", nom:"Moselle",                 region:"Grand Est",                   cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:true,  plus4voisins:false, sup6000km2:true,  inf3500km2:false, pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:false, motCruche:true,  motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:true,  clubL1L2:true  } },
+  { num:"58", nom:"Nièvre",                  region:"Bourgogne-Franche-Comté",     cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"59", nom:"Nord",                    region:"Hauts-de-France",             cats:{ fleuve:false, montagne:false, multiple5:false, cotier:true,  frontalier:true,  plus4voisins:false, sup6000km2:false, inf3500km2:false, pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:false, voteLepen2022:true,  genreMasc:true,  genreFem:false, motCarafe:true,  motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:true,  plusNordVancouver:true,  clubL1L2:true  } },
+  { num:"60", nom:"Oise",                    region:"Hauts-de-France",             cats:{ fleuve:false, montagne:false, multiple5:true,  cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:true,  clubL1L2:false } },
+  { num:"61", nom:"Orne",                    region:"Normandie",                   cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"62", nom:"Pas-de-Calais",          region:"Hauts-de-France",             cats:{ fleuve:false, montagne:false, multiple5:false, cotier:true,  frontalier:false, plus4voisins:false, sup6000km2:true,  inf3500km2:false, pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:false, voteLepen2022:true,  genreMasc:true,  genreFem:false, motCarafe:true,  motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:true,  zenith:false, plusNordVancouver:true,  clubL1L2:true  } },
+  { num:"63", nom:"Puy-de-Dôme",            region:"Auvergne-Rhône-Alpes",        cats:{ fleuve:false, montagne:true,  multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:true,  zenith:true,  plusNordVancouver:false, clubL1L2:true  } },
+  { num:"64", nom:"Pyrénées-Atlantiques",   region:"Nouvelle-Aquitaine",          cats:{ fleuve:false, montagne:true,  multiple5:false, cotier:true,  frontalier:true,  plus4voisins:false, sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:true,  plusNordVancouver:false, clubL1L2:true  } },
+  { num:"65", nom:"Hautes-Pyrénées",        region:"Occitanie",                   cats:{ fleuve:false, montagne:true,  multiple5:true,  cotier:false, frontalier:true,  plus4voisins:false, sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:false, plus300Clermont:true,  zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"66", nom:"Pyrénées-Orientales",    region:"Occitanie",                   cats:{ fleuve:false, montagne:true,  multiple5:false, cotier:true,  frontalier:true,  plus4voisins:false, sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:true,  zoneO:false, voteMacron2022:false, voteLepen2022:true,  genreMasc:false, genreFem:true,  motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"67", nom:"Bas-Rhin",                region:"Grand Est",                   cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:false, frontalier:true,  plus4voisins:false, sup6000km2:false, inf3500km2:false, pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:false, motPichet:false, motCruche:true,  motPotDeau:false, asterixVisite:false, zenith:true,  plusNordVancouver:false, clubL1L2:true  } },
+  { num:"68", nom:"Haut-Rhin",               region:"Grand Est",                   cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:false, frontalier:true,  plus4voisins:false, sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:false, motPichet:false, motCruche:true,  motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"69", nom:"Rhône",                   region:"Auvergne-Rhône-Alpes",        cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:true,  pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:false, motPichet:false, motCruche:false, motPotDeau:true,  asterixVisite:true,  zenith:false, plusNordVancouver:false, clubL1L2:true  } },
+  { num:"70", nom:"Haute-Saône",             region:"Bourgogne-Franche-Comté",     cats:{ fleuve:false, montagne:false, multiple5:true,  cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:false, voteLepen2022:true,  genreMasc:false, genreFem:true,  motCarafe:false, motPichet:false, motCruche:true,  motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"71", nom:"Saône-et-Loire",          region:"Bourgogne-Franche-Comté",     cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:false, sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:false, motCruche:false, motPotDeau:true,  asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"72", nom:"Sarthe",                  region:"Pays de la Loire",            cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:true  } },
+  { num:"73", nom:"Savoie",                  region:"Auvergne-Rhône-Alpes",        cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:true,  plus4voisins:false, sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:false, moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"74", nom:"Haute-Savoie",            region:"Auvergne-Rhône-Alpes",        cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:true,  plus4voisins:false, sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:true  } },
+  { num:"75", nom:"Paris",                   region:"Île-de-France",               cats:{ fleuve:false, montagne:false, multiple5:true,  cotier:false, frontalier:false, plus4voisins:false, sup6000km2:false, inf3500km2:true,  pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:true,  zenith:true,  plusNordVancouver:false, clubL1L2:true  } },
+  { num:"76", nom:"Seine-Maritime",          region:"Normandie",                   cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:true,  frontalier:false, plus4voisins:false, sup6000km2:true,  inf3500km2:false, pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:false, motCruche:true,  motPotDeau:false, asterixVisite:true,  zenith:true,  plusNordVancouver:true,  clubL1L2:true  } },
+  { num:"77", nom:"Seine-et-Marne",          region:"Île-de-France",               cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"78", nom:"Yvelines",                region:"Île-de-France",               cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:true,  pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"79", nom:"Deux-Sèvres",             region:"Nouvelle-Aquitaine",          cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:false, moins300Clermont:true,  plus300Clermont:false, zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"80", nom:"Somme",                   region:"Hauts-de-France",             cats:{ fleuve:true,  montagne:false, multiple5:true,  cotier:true,  frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:false, voteLepen2022:true,  genreMasc:false, genreFem:true,  motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:true,  zenith:true,  plusNordVancouver:true,  clubL1L2:true  } },
+  { num:"81", nom:"Tarn",                    region:"Occitanie",                   cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"82", nom:"Tarn-et-Garonne",         region:"Occitanie",                   cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:false, moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:false, voteLepen2022:true,  genreMasc:true,  genreFem:false, motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"83", nom:"Var",                     region:"Provence-Alpes-Côte d'Azur",  cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:true,  frontalier:false, plus4voisins:false, sup6000km2:true,  inf3500km2:false, pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:true,  zoneO:false, voteMacron2022:false, voteLepen2022:true,  genreMasc:true,  genreFem:false, motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:true,  asterixVisite:false, zenith:true,  plusNordVancouver:false, clubL1L2:false } },
+  { num:"84", nom:"Vaucluse",                region:"Provence-Alpes-Côte d'Azur",  cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:false, voteLepen2022:true,  genreMasc:true,  genreFem:false, motCarafe:false, motPichet:false, motCruche:false, motPotDeau:true,  asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"85", nom:"Vendée",                  region:"Pays de la Loire",            cats:{ fleuve:false, montagne:false, multiple5:true,  cotier:true,  frontalier:false, plus4voisins:false, sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"86", nom:"Vienne",                  region:"Nouvelle-Aquitaine",          cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:false, moins300Clermont:true,  plus300Clermont:false, zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"87", nom:"Haute-Vienne",            region:"Nouvelle-Aquitaine",          cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:false, moins300Clermont:true,  plus300Clermont:false, zoneL:true,  zoneO:false, voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:false, motPichet:true,  motCruche:false, motPotDeau:false, asterixVisite:false, zenith:true,  plusNordVancouver:false, clubL1L2:false } },
+  { num:"88", nom:"Vosges",                  region:"Grand Est",                   cats:{ fleuve:false, montagne:true,  multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:false, voteLepen2022:true,  genreMasc:false, genreFem:true,  motCarafe:false, motPichet:false, motCruche:true,  motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"89", nom:"Yonne",                   region:"Bourgogne-Franche-Comté",     cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:true,  inf3500km2:false, pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:true,  plus300Clermont:false, zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:true,  motPichet:false, motCruche:true,  motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:true  } },
+  { num:"90", nom:"Territoire de Belfort",   region:"Bourgogne-Franche-Comté",     cats:{ fleuve:false, montagne:false, multiple5:true,  cotier:false, frontalier:true,  plus4voisins:false, sup6000km2:false, inf3500km2:true,  pop1M:false, pop500k:true,  sans100villes:true,  moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:false, motPichet:false, motCruche:true,  motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"91", nom:"Essonne",                 region:"Île-de-France",               cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:true,  pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"92", nom:"Hauts-de-Seine",          region:"Île-de-France",               cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:true,  pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"93", nom:"Seine-Saint-Denis",       region:"Île-de-France",               cats:{ fleuve:true,  montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:true,  pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:false, genreFem:true,  motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:true  } },
+  { num:"94", nom:"Val-de-Marne",            region:"Île-de-France",               cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:true,  pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } },
+  { num:"95", nom:"Val-d'Oise",              region:"Île-de-France",               cats:{ fleuve:false, montagne:false, multiple5:true,  cotier:false, frontalier:false, plus4voisins:true,  sup6000km2:false, inf3500km2:true,  pop1M:true,  pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true,  zoneL:false, zoneO:true,  voteMacron2022:true,  voteLepen2022:false, genreMasc:true,  genreFem:false, motCarafe:true,  motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false } }
+];
+
+DEPARTEMENTS.forEach(d => {
+  d.cats.sansE = !/e/i.test(d.nom);
+  d.cats.voyelle = /^[AEIOUÀÂÉÈÊËÎÏÔÙÛÜÆŒaeiouàâéèêëîïôùûüæœ]/i.test(d.nom);
+  const idReg = REGION_VERS_ID[d.region];
+  if (idReg) d.cats[idReg] = true;
+  Object.values(REGION_VERS_ID).forEach(id => { if (!(id in d.cats)) d.cats[id] = false; });
+});
+
+// ─────────────────────────────────────────────
+// 2. GÉNÉRATION & PONDÉRATION DE RARETÉ / POINTS
+// ─────────────────────────────────────────────
+function graineDuJour() {
+  const d = new Date();
+  return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+}
+function creerAleatoire(graine) {
+  let s = graine;
+  return () => { s = (s * 1664525 + 1013904223) & 0xffffffff; return (s >>> 0) / 0xffffffff; };
+}
+function melanger(tableau, rng) {
+  const t = [...tableau];
+  for (let i = t.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [t[i], t[j]] = [t[j], t[i]]; }
+  return t;
+}
+function reponsesValides(idL, idC) {
+  return DEPARTEMENTS.filter(d => d.cats[idL] && d.cats[idC]).map(d => d.nom);
+}
+function choisirCategories(rng) {
+  const ids = CATEGORIES.map(c => c.id);
+  const MIN_REPONSES = 3;
+
+  for (let i = 0; i < 1000; i++) {
+    const m = melanger(ids, rng);
+    const lignes = m.slice(0, 3);
+    const colonnes = m.slice(3, 6);
+
+    const grilleValide = lignes.every(l => 
+      colonnes.every(c => reponsesValides(l, c).length >= MIN_REPONSES)
+    );
+
+    if (grilleValide) {
+      return { lignes, colonnes };
+    }
+  }
+
+  return { 
+    lignes: ["fleuve", "plus4voisins", "sup6000km2"], 
+    colonnes: ["moins300CF", "sans100villes", "pop500k"] 
+  };
+}
+
+const rng = creerAleatoire(graineDuJour());
+const { lignes, colonnes } = choisirCategories(rng);
+const ROWS = lignes.map(id => ({ id, label: CATEGORIES.find(c => c.id === id).label }));
+const COLS = colonnes.map(id => ({ id, label: CATEGORIES.find(c => c.id === id).label }));
+const ANSWERS = ROWS.map(r => COLS.map(c => reponsesValides(r.id, c.id)));
+const ALL_DEPS = DEPARTEMENTS.map(d => d.nom);
+
+// Calcul déterministe des pourcentages et des points par case (Somme = 100.0 %)
+const STATS = ROWS.map((r, rIdx) => COLS.map((c, cIdx) => {
+  const deps = ANSWERS[rIdx][cIdx];
+  if (deps.length === 0) return {};
+
+  const weights = {};
+  let totalW = 0;
+
+  deps.forEach(nom => {
+    const d = DEPARTEMENTS.find(item => item.nom === nom);
+    let w = 15;
+    if (d.cats.pop1M) w += 40;
+    if (!d.cats.sans100villes) w += 20;
+    if (d.cats.pop500k) w -= 8;
+
+    const pseudoRand = ((parseInt(d.num, 10) * 17 + rIdx * 31 + cIdx * 13 + graineDuJour()) % 40) / 10;
+    w = Math.max(1, w + pseudoRand);
+    weights[nom] = w;
+    totalW += w;
+  });
+
+  let distributed = 0;
+  const items = deps.map(nom => {
+    const exact = (weights[nom] / totalW) * 1000;
+    const base = Math.floor(exact);
+    const remainder = exact - base;
+    distributed += base;
+    return { nom, base, remainder };
+  });
+
+  let diff = 1000 - distributed;
+  items.sort((a, b) => b.remainder - a.remainder);
+  for (let i = 0; i < diff; i++) {
+    items[i].base += 1;
+  }
+
+  const pcts = {};
+  let minPct = 100, maxPct = 0;
+  items.forEach(item => {
+    const p = parseFloat((item.base / 10).toFixed(1));
+    pcts[item.nom] = p;
+    if (p < minPct) minPct = p;
+    if (p > maxPct) maxPct = p;
+  });
+
+  const cellData = {};
+  items.forEach(item => {
+    const p = pcts[item.nom];
+    let pts = 100;
+    if (maxPct !== minPct) {
+      pts = Math.round(100 - 80 * ((p - minPct) / (maxPct - minPct)));
+    }
+    cellData[item.nom] = { pct: p, pts: pts };
+  });
+
+  return cellData;
+}));
+
+// ─────────────────────────────────────────────
+// 3. ÉTAT & SAUVEGARDE QUOTIDIENNE (PARTIE UNIQUE)
+// ─────────────────────────────────────────────
+const STORAGE_KEY = 'deptdoku_' + graineDuJour();
+
+let gridState = Array.from({length: 3}, () => Array(3).fill(null));
+let usedAnswers = new Set();
+let selectedCell = null;
+let mistakes = 0;
+const MAX_MISTAKES = 5;
+let sugSelected = -1;
+let gameOver = false;
+let currentScore = 0;
+let isFreePlay = false;
+
+function calculerBonus() {
+  const won = gridState.every(row => row.every(cell => cell !== null));
+  if (!won) return 0;
+  return Math.max(0, 100 - (mistakes * 20));
+}
+
+function calculerScoreTotal() {
+  return currentScore + calculerBonus();
+}
+
+function saveGameProgress() {
+  const data = {
+    gridState,
+    mistakes,
+    gameOver,
+    currentScore,
+    usedAnswers: Array.from(usedAnswers),
+    isFreePlay
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function loadSavedGame() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) return false;
+  try {
+    const data = JSON.parse(saved);
+    gridState = data.gridState || gridState;
+    mistakes = data.mistakes || 0;
+    gameOver = data.gameOver || false;
+    currentScore = data.currentScore || 0;
+    usedAnswers = new Set(data.usedAnswers || []);
+    isFreePlay = data.isFreePlay || false;
+
+    for (let i = 0; i < mistakes; i++) {
+      const d = document.getElementById('d' + i);
+      if (d) d.classList.add('used');
+    }
+    updateScoreDisplay();
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function updateScoreDisplay() {
+  document.getElementById('totalScore').textContent = calculerScoreTotal();
+}
+
+function setDateDisplay() {
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const d = new Date();
+  const dateFormatted = d.toLocaleDateString('fr-FR', options);
+  document.getElementById('todayDate').textContent = `Grille du ${dateFormatted}`;
+}
+
+// ─────────────────────────────────────────────
+// 4. RENDU GRILLE & CARTE D3 SANS CORSE
+// ─────────────────────────────────────────────
+function buildGrid() {
+  const table = document.getElementById('grid');
+  table.innerHTML = '';
+  const thead = table.createTHead();
+  const hr = thead.insertRow();
+  hr.insertCell();
+  COLS.forEach(c => { const th = document.createElement('th'); th.textContent = c.label; hr.appendChild(th); });
+  const tbody = table.createTBody();
+  ROWS.forEach((row, r) => {
+    const tr = tbody.insertRow();
+    const th = document.createElement('th'); th.textContent = row.label; tr.appendChild(th);
+    COLS.forEach((_, c) => {
+      const td = tr.insertCell();
+      renderCell(td, r, c);
+      td.addEventListener('click', () => handleCellClick(td, r, c));
+    });
+  });
+}
+
+function renderCell(td, r, c) {
+  td.innerHTML = '';
+  const cellData = gridState[r][c];
+
+  if (cellData) {
+    td.className = 'filled' + (gameOver && !isFreePlay ? ' game-over-clickable' : '');
+    td.innerHTML = `
+      <div class="cell-answer">
+        <div class="cell-answer-name">${cellData.nom} (${cellData.num})</div>
+        <div class="cell-answer-details">
+          <span class="cell-answer-pct">${cellData.pct}%</span>
+          <span class="cell-answer-pts">+${cellData.pts}</span>
+        </div>
+      </div>`;
+  } else {
+    td.className = (gameOver && !isFreePlay) ? 'game-over-clickable' : '';
+    td.innerHTML = `<span class="cell-placeholder">${gameOver && !isFreePlay ? '?' : ''}</span>`;
+  }
+}
+
+function handleCellClick(td, r, c) {
+  if (gameOver && !isFreePlay) {
+    openModal(r, c);
+    return;
+  }
+  selectCell(td, r, c);
+}
+
+function selectCell(td, r, c) {
+  if (td.classList.contains('filled')) return;
+  if (mistakes >= MAX_MISTAKES && !isFreePlay) return;
+  if (selectedCell) selectedCell.td.classList.remove('selected');
+  selectedCell = { r, c, td };
+  td.classList.add('selected');
+
+  // Nombre de réponses possibles pour cette case
+  const nbReponses = ANSWERS[r][c].length;
+  searchEl.placeholder = `${nbReponses} réponse${nbReponses > 1 ? 's' : ''} possible${nbReponses > 1 ? 's' : ''}…`;
+
+  searchEl.disabled = false;
+  searchEl.value = '';
+  searchEl.focus();
+  document.getElementById('hint').textContent = `Case : ${ROWS[r].label} × ${COLS[c].label}`;
+  document.getElementById('hint').className = 'search-hint active';
+  closeSuggestions();
+}
+
+function checkGameOver() {
+  const won = gridState.every(row => row.every(cell => cell !== null));
+  if (won) {
+    if (isFreePlay) {
+      searchEl.disabled = true;
+      searchEl.placeholder = 'Tapez au moins 3 lettres…';
+      if (selectedCell) { selectedCell.td.classList.remove('selected'); selectedCell = null; }
+      document.getElementById('hint').textContent = `Grille complétée ! (Mode sans score)`;
+      document.getElementById('hint').className = 'search-hint';
+      saveGameProgress();
+      return;
+    }
+
+    gameOver = true;
+    searchEl.disabled = true;
+    searchEl.placeholder = 'Tapez au moins 3 lettres…';
+    if (selectedCell) { selectedCell.td.classList.remove('selected'); selectedCell = null; }
+    
+    updateScoreDisplay();
+    const finalScore = calculerScoreTotal();
+    const bonus = calculerBonus();
+    
+    document.getElementById('hint').textContent = `Victoire ! Score final : ${finalScore} / 1000 (dont ${bonus} pts de bonus)`;
+    document.getElementById('hint').className = 'search-hint';
+    activateGameOverMode();
+    showEndGamePopup(true);
+    saveGameProgress();
+  }
+}
+
+function activateGameOverMode() {
+  const tds = document.querySelectorAll('#grid tbody td');
+  let idx = 0;
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      renderCell(tds[idx], r, c);
+      idx++;
+    }
+  }
+  if (!document.querySelector('.game-over-hint')) {
+    const hint = document.createElement('p');
+    hint.className = 'game-over-hint';
+    hint.textContent = 'Clique sur une case pour explorer les réponses possibles';
+    document.querySelector('.left-pane').appendChild(hint);
+  }
+}
+
+const tooltip = document.getElementById('mapTooltip');
+
+async function initMap() {
+  try {
+    const res = await fetch('https://cdn.jsdelivr.net/gh/gregoiredavid/france-geojson@master/departements.geojson');
+    const geojson = await res.json();
+    const svg = d3.select('#map-svg');
+
+    // Exclusion de la Corse (2A et 2B)
+    const featuresSansCorse = geojson.features.filter(
+      d => d.properties.code !== '2A' && d.properties.code !== '2B'
+    );
+
+    const projection = d3.geoConicConformal()
+      .center([2.65, 46.4])
+      .scale(2550)
+      .translate([250, 250]);
+
+    const path = d3.geoPath().projection(projection);
+
+    svg.selectAll('path.dept')
+      .data(featuresSansCorse)
+      .enter()
+      .append('path')
+      .attr('class', 'dept')
+      .attr('d', path)
+      .attr('id', d => 'map-' + d.properties.code)
+      .on('mousemove', function(event, d) {
+        if (d3.select(this).classed('correct')) {
+          const deptObj = DEPARTEMENTS.find(item => item.num === d.properties.code);
+          const name = deptObj ? deptObj.nom : d.properties.nom;
+          const rect = document.querySelector('.right-pane').getBoundingClientRect();
+          
+          tooltip.style.display = 'block';
+          tooltip.style.left = (event.clientX - rect.left) + 'px';
+          tooltip.style.top = (event.clientY - rect.top) + 'px';
+          tooltip.textContent = `${name} (${d.properties.code})`;
+        }
+      })
+      .on('mouseleave', function() {
+        tooltip.style.display = 'none';
+      });
+
+    // Colorer les départements sauvegardés si partie rechargée
+    gridState.forEach(row => row.forEach(cell => {
+      if (cell) colorMap(cell.num, true);
+    }));
+  } catch (e) {
+    console.error("Erreur de chargement de la carte", e);
+  }
+}
+
+function colorMap(num, isCorrect) {
+  const el = document.getElementById('map-' + num);
+  if (!el) return;
+  if (isCorrect) {
+    el.classList.remove('wrong');
+    el.classList.add('correct');
+  } else {
+    el.classList.add('wrong');
+    setTimeout(() => el.classList.remove('wrong'), 1000);
+  }
+}
+
+// ─────────────────────────────────────────────
+// 5. POP-UP DE FIN & PARTAGE
+// ─────────────────────────────────────────────
+function showEndGamePopup(isWon) {
+  const modal = document.getElementById('endGameModal');
+  let foundCount = 0;
+  let rarest = null;
+
+  gridState.forEach(row => row.forEach(cell => {
+    if (cell) {
+      foundCount++;
+      if (!rarest || cell.pct < rarest.pct) {
+        rarest = cell;
+      }
+    }
+  }));
+
+  const bonus = calculerBonus();
+  const finalScore = calculerScoreTotal();
+
+  document.getElementById('endGameTitle').textContent = isWon ? 'Victoire !' : 'Partie terminée';
+  document.getElementById('endGameSubtitle').textContent = isWon ? 'Grille entièrement complétée' : 'Limite des 5 erreurs atteinte';
+  document.getElementById('endScore').textContent = `${finalScore} / 1000`;
+  document.getElementById('endFound').textContent = `${foundCount} / 9`;
+  document.getElementById('endMistakes').textContent = `${mistakes} / 5`;
+
+  const btnFree = document.getElementById('btnFreePlayTrigger');
+  if (!isWon && foundCount < 9) {
+    btnFree.style.display = 'block';
+  } else {
+    btnFree.style.display = 'none';
+  }
+
+  if (isWon) {
+    document.getElementById('endBonusBox').style.display = 'block';
+    document.getElementById('endBonusVal').textContent = `+${bonus} pts (départ 100 - ${mistakes * 20})`;
+  } else {
+    document.getElementById('endBonusBox').style.display = 'none';
+  }
+
+  if (rarest) {
+    document.getElementById('endRarest').textContent = `${rarest.nom} (${rarest.pct} %)`;
+  } else {
+    document.getElementById('endRarest').textContent = 'Aucun département trouvé';
+  }
+
+  modal.classList.add('open');
+}
+
+function genererTextePartage() {
+  let foundCount = 0;
+  let gridVisual = '';
+
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      if (gridState[r][c]) {
+        foundCount++;
+        gridVisual += '🟩';
+      } else {
+        gridVisual += '⬜';
+      }
+    }
+    gridVisual += '\n';
+  }
+
+  let rarestText = '';
+  let rarest = null;
+  gridState.forEach(row => row.forEach(cell => {
+    if (cell && (!rarest || cell.pct < rarest.pct)) rarest = cell;
+  }));
+  if (rarest) rarestText = `\nDépartement le plus rare : ${rarest.nom} (${rarest.pct} %)`;
+
+  const bonus = calculerBonus();
+  const finalScore = calculerScoreTotal();
+  const bonusText = foundCount === 9 ? ` (dont bonus : +${bonus} pts)` : '';
+
+  const d = new Date();
+  const dateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+
+  return `Départementdoku (${dateStr})\nScore : ${finalScore}/1000 pts${bonusText} (${foundCount}/9)\nErreurs : ${mistakes}/5${rarestText}\n\n${gridVisual}`;
+}
+
+document.getElementById('btnShare').addEventListener('click', async () => {
+  const text = genererTextePartage();
+  const btn = document.getElementById('btnShare');
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.textContent = 'Copié !';
+    setTimeout(() => { btn.textContent = 'Copier / Partager mon score'; }, 2500);
+  } catch (err) {
+    alert(text);
+  }
+});
+
+// ─────────────────────────────────────────────
+// 6. GESTION DES MODALS
+// ─────────────────────────────────────────────
+function openModal(r, c) {
+  const cellStats = STATS[r][c];
+  const sortedDeps = Object.keys(cellStats).sort((a, b) => cellStats[a].pct - cellStats[b].pct);
+  const played = gridState[r][c];
+
+  document.getElementById('modalCats').innerHTML =
+    `<span>${ROWS[r].label}</span> × <span>${COLS[c].label}</span>`;
+
+  const total = sortedDeps.length;
+  document.getElementById('modalSubtitle').textContent =
+    `${total} département${total > 1 ? 's' : ''} valide${total > 1 ? 's' : ''} :`;
+
+  const container = document.getElementById('modalAnswers');
+  container.innerHTML = '';
+
+  sortedDeps.forEach(dep => {
+    const isChosen = played && played.nom === dep;
+    const info = cellStats[dep];
+    const row = document.createElement('div');
+    row.className = 'answer-row' + (isChosen ? ' chosen' : '');
+    row.innerHTML = `
+      <span>${isChosen ? '✓ ' : ''}${dep}</span>
+      <div class="answer-row-right">
+        <span class="answer-row-pct">${info.pct} %</span>
+        <span class="answer-row-pts">+${info.pts} pts</span>
+      </div>
+    `;
+    container.appendChild(row);
+  });
+
+  const countEl = document.getElementById('modalCount');
+  countEl.textContent = played
+    ? `Ton choix : ${played.nom} (${played.pct} % — +${played.pts} pts)`
+    : 'Case non répondue';
+
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+});
+
+// Modal Règles
+const rulesModal = document.getElementById('rulesModal');
+document.getElementById('btnOpenRules').addEventListener('click', () => rulesModal.classList.add('open'));
+document.getElementById('btnStartGame').addEventListener('click', () => rulesModal.classList.remove('open'));
+document.getElementById('btnCloseRulesCross').addEventListener('click', () => rulesModal.classList.remove('open'));
+rulesModal.addEventListener('click', e => { if (e.target === rulesModal) rulesModal.classList.remove('open'); });
+
+// Modal En savoir plus
+const aboutModal = document.getElementById('aboutModal');
+document.getElementById('btnOpenAbout').addEventListener('click', () => aboutModal.classList.add('open'));
+document.getElementById('btnCloseAbout').addEventListener('click', () => aboutModal.classList.remove('open'));
+document.getElementById('btnCloseAboutCross').addEventListener('click', () => aboutModal.classList.remove('open'));
+aboutModal.addEventListener('click', e => { if (e.target === aboutModal) aboutModal.classList.remove('open'); });
+
+// Modal Mentions Légales
+const legalModal = document.getElementById('legalModal');
+document.getElementById('btnOpenLegal').addEventListener('click', () => legalModal.classList.add('open'));
+document.getElementById('btnCloseLegal').addEventListener('click', () => legalModal.classList.remove('open'));
+document.getElementById('btnCloseLegalCross').addEventListener('click', () => legalModal.classList.remove('open'));
+legalModal.addEventListener('click', e => { if (e.target === legalModal) legalModal.classList.remove('open'); });
+
+// Modal Mode Libre (Jouer sans score)
+const freePlayModal = document.getElementById('freePlayModal');
+document.getElementById('btnFreePlayTrigger').addEventListener('click', () => {
+  document.getElementById('endGameModal').classList.remove('open');
+  freePlayModal.classList.add('open');
+});
+
+document.getElementById('btnConfirmFreePlay').addEventListener('click', () => {
+  freePlayModal.classList.remove('open');
+  isFreePlay = true;
+  const existingHint = document.querySelector('.game-over-hint');
+  if (existingHint) existingHint.remove();
+
+  const tds = document.querySelectorAll('#grid tbody td');
+  let idx = 0;
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      renderCell(tds[idx], r, c);
+      idx++;
+    }
+  }
+
+  document.getElementById('hint').textContent = 'Mode détente actif : remplis la grille pour le plaisir !';
+  document.getElementById('hint').className = 'search-hint';
+  saveGameProgress();
+});
+freePlayModal.addEventListener('click', e => { if (e.target === freePlayModal) freePlayModal.classList.remove('open'); });
+
+// Fermeture globale à la touche Échap
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeModal();
+    rulesModal.classList.remove('open');
+    aboutModal.classList.remove('open');
+    legalModal.classList.remove('open');
+    document.getElementById('endGameModal').classList.remove('open');
+    freePlayModal.classList.remove('open');
+  }
+});
+
+// ─────────────────────────────────────────────
+// 7. AUTOCOMPLETE
+// ─────────────────────────────────────────────
+const searchEl = document.getElementById('search');
+const sugBox = document.getElementById('suggestions');
+
+searchEl.addEventListener('input', () => { sugSelected = -1; updateSuggestions(searchEl.value); });
+
+searchEl.addEventListener('keydown', e => {
+  const items = sugBox.querySelectorAll('.sug-item');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    sugSelected = Math.min(sugSelected + 1, items.length - 1);
+    highlightSug(items);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    sugSelected = Math.max(sugSelected - 1, 0);
+    highlightSug(items);
+  } else if (e.key === 'Enter') {
+    if (sugSelected >= 0 && items[sugSelected]) submit(items[sugSelected].dataset.val);
+    else if (items.length === 1) submit(items[0].dataset.val);
+  } else if (e.key === 'Escape') {
+    closeSuggestions();
+  }
+});
+
+function highlightSug(items) {
+  items.forEach((el, i) => el.classList.toggle('selected', i === sugSelected));
+  if (items[sugSelected]) items[sugSelected].scrollIntoView({ block: 'nearest' });
+}
+
+function updateSuggestions(q) {
+  if (!selectedCell) { closeSuggestions(); return; }
+  const norm = normalize(q.trim());
+  if (norm.length < 3) { closeSuggestions(); return; }
+  const matches = ALL_DEPS.filter(d => !usedAnswers.has(d) && normalize(d).includes(norm));
+  if (matches.length === 0) { closeSuggestions(); return; }
+  sugBox.innerHTML = '';
+  matches.slice(0, 20).forEach(dep => {
+    const div = document.createElement('div');
+    div.className = 'sug-item';
+    div.dataset.val = dep;
+    div.innerHTML = highlightText(dep, q.trim());
+    div.addEventListener('mousedown', e => { e.preventDefault(); submit(dep); });
+    sugBox.appendChild(div);
+  });
+  sugBox.classList.add('open');
+}
+
+function highlightText(text, q) {
+  if (!q) return text;
+  const chars = normalize(q).split('').map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  if (chars.length === 0) return text;
+  const pattern = chars.map(c => `[${c}]`).join("[\\s\\-']?");
+  try {
+    const cleanText = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const match = cleanText.match(new RegExp(pattern, 'i'));
+    if (!match) return text;
+    const start = match.index;
+    const len = match[0].length;
+    return text.slice(0, start) + '<mark>' + text.slice(start, start + len) + '</mark>' + text.slice(start + len);
+  } catch (e) {
+    return text;
+  }
+}
+
+function normalize(s) {
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+}
+
+function closeSuggestions() {
+  sugBox.classList.remove('open');
+  sugBox.innerHTML = '';
+  sugSelected = -1;
+}
+
+// ─────────────────────────────────────────────
+// 8. VALIDATION DU TOUR
+// ─────────────────────────────────────────────
+function submit(dep) {
+  if (!selectedCell) return;
+  const { r, c, td } = selectedCell;
+  const valid = ANSWERS[r][c].includes(dep);
+  const depObj = DEPARTEMENTS.find(d => d.nom === dep);
+  closeSuggestions();
+  searchEl.value = '';
+
+  if (valid) {
+    const info = STATS[r][c][dep];
+    const ptsWon = isFreePlay ? 0 : info.pts;
+    if (!isFreePlay) {
+      currentScore += info.pts;
+      updateScoreDisplay();
+    }
+
+    gridState[r][c] = { nom: dep, num: depObj.num, pct: info.pct, pts: ptsWon };
+    usedAnswers.add(dep);
+    if (depObj) colorMap(depObj.num, true);
+    selectedCell = null;
+    searchEl.disabled = true;
+    searchEl.placeholder = 'Tapez au moins 3 lettres…';
+    document.getElementById('hint').textContent = isFreePlay 
+      ? `${dep} (${info.pct}%) — Validé !`
+      : `${dep} (${info.pct}% — +${info.pts} pts) — Validé !`;
+    document.getElementById('hint').className = 'search-hint';
+    renderCell(td, r, c);
+    saveGameProgress();
+    checkGameOver();
+  } else {
+    if (isFreePlay) {
+      td.classList.add('wrong');
+      setTimeout(() => { td.classList.remove('wrong'); td.classList.add('selected'); }, 400);
+      document.getElementById('hint').textContent = `"${dep}" n'est pas valide ici`;
+      return;
+    }
+
+    mistakes++;
+    if (depObj) colorMap(depObj.num, false);
+    document.getElementById('d' + (mistakes - 1)).classList.add('used');
+    td.classList.add('wrong');
+    setTimeout(() => { td.classList.remove('wrong'); td.classList.add('selected'); }, 400);
+    document.getElementById('hint').textContent = `"${dep}" n'est pas valide ici`;
+    saveGameProgress();
+    if (mistakes >= MAX_MISTAKES) {
+      gameOver = true;
+      searchEl.disabled = true;
+      searchEl.placeholder = 'Tapez au moins 3 lettres…';
+      selectedCell.td.classList.remove('selected');
+      selectedCell = null;
+      document.getElementById('hint').textContent = `5 erreurs — partie terminée ! (${calculerScoreTotal()} pts)`;
+      document.getElementById('hint').className = 'search-hint';
+      activateGameOverMode();
+      showEndGamePopup(false);
+      saveGameProgress();
+    }
+  }
+}
+
+document.addEventListener('click', e => { if (!e.target.closest('.search-section')) closeSuggestions(); });
+
+// ─────────────────────────────────────────────
+// INITIALISATION GLOBALE
+// ─────────────────────────────────────────────
+setDateDisplay();
+const hasPlayed = loadSavedGame();
+buildGrid();
+initMap();
+updateScoreDisplay();
+
+if (hasPlayed) {
+  document.getElementById('rulesModal').classList.remove('open');
+  if (gameOver && !isFreePlay) {
+    searchEl.disabled = true;
+    searchEl.placeholder = 'Tapez au moins 3 lettres…';
+    const isWon = gridState.every(row => row.every(cell => cell !== null));
+    document.getElementById('hint').textContent = `Partie terminée (${calculerScoreTotal()} pts) — Clique sur une case pour voir les réponses`;
+    activateGameOverMode();
+    showEndGamePopup(isWon);
+  } else if (isFreePlay) {
+    const isFull = gridState.every(row => row.every(cell => cell !== null));
+    document.getElementById('hint').textContent = isFull 
+      ? 'Grille complétée ! (Mode sans score)' 
+      : 'Mode détente actif : remplis la grille pour le plaisir !';
+  }
+}
+</script>
+</body>
+</html>
