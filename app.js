@@ -851,7 +851,7 @@ function genererTextePartage() {
   const d = new Date();
   const dateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
 
-  return `Départementdoku (${dateStr})\nScore : ${finalScore}/1000 pts${bonusText} (${foundCount}/9)\nErreurs : ${mistakes}/5${rarestText}\n\n${gridVisual}`;
+  return `Top-Départ(ement) (${dateStr})\nScore : ${finalScore}/1000 pts${bonusText} (${foundCount}/9)\nErreurs : ${mistakes}/5${rarestText}\n\n${gridVisual}`;
 }
 
 document.getElementById('btnShare').addEventListener('click', async () => {
