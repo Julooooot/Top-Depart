@@ -398,24 +398,32 @@ function trouverGrille(pool, rng, minRep = 3, historique = []) {
   return meilleureGrille;
 }
 
+const NB_JOURS_BANNIS = 3; // une catégorie utilisée ne peut pas revenir avant ce nombre de jours
+
 async function choisirCategories() {
   const tous = CATEGORIES.map(c => c.id);
   const historique = await chargerHistoriqueCategories();
-  const hier = historique.find(j => j.date === dateHistorique(1));
-  const catsHier = hier ? hier.categories : [];
-
-  const bannis = new Set();
-  catsHier.forEach(id => {
-    bannis.add(id);
-    getMembresFamille(id).forEach(m => bannis.add(m));
-  });
-
-  const poolAujourdhui = tous.filter(id => !bannis.has(id));
   const rng = creerAleatoire(graineDuJour(0));
-  let grille = trouverGrille(poolAujourdhui, rng, 3, historique);
 
-  if (!grille) {
-    grille = trouverGrille(tous, rng, 3, historique);
+  function construireBannis(nbJours) {
+    const bannis = new Set();
+    historique.slice(0, nbJours).forEach(jour => {
+      jour.categories.forEach(id => {
+        bannis.add(id);
+        getMembresFamille(id).forEach(m => bannis.add(m));
+      });
+    });
+    return bannis;
+  }
+
+  // On essaie d'abord avec la contrainte la plus stricte (3 jours),
+  // puis on la relâche progressivement (2j, 1j, 0j) seulement si
+  // aucune grille valide n'a pu être trouvée.
+  let grille = null;
+  for (let nbJours = NB_JOURS_BANNIS; nbJours >= 0 && !grille; nbJours--) {
+    const bannis = construireBannis(nbJours);
+    const pool = tous.filter(id => !bannis.has(id));
+    grille = trouverGrille(pool, rng, 3, historique);
   }
 
   if (!grille) {
