@@ -173,7 +173,7 @@ const DEPARTEMENTS = [
 ];
 
 DEPARTEMENTS.forEach(d => {
-  d.cats.sansE = !/e/i.test(d.nom);
+  d.cats.sansE = !/[eéèêë]/i.test(d.nom);
   d.cats.voyelle = /^[AEIOUÀÂÉÈÊËÎÏÔÙÛÜÆŒaeiouàâéèêëîïôùûüæœ]/i.test(d.nom);
   const idReg = REGION_VERS_ID[d.region];
   if (idReg) d.cats[idReg] = true;
