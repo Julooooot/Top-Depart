@@ -197,11 +197,11 @@ function melanger(tableau, rng) {
   return t;
 }
 
-async function chargerHistoriqueCategories() {
+function chargerHistoriqueCategories() {
   try {
-    const res = await window.storage.get(CATEGORY_HISTORY_KEY, true);
-    if (!res || !res.value) return [];
-    const data = JSON.parse(res.value);
+    const raw = localStorage.getItem(CATEGORY_HISTORY_KEY);
+    if (!raw) return [];
+    const data = JSON.parse(raw);
     if (!Array.isArray(data)) return [];
     return data
       .filter(j => j && typeof j.date === "string" && Array.isArray(j.categories))
@@ -212,13 +212,9 @@ async function chargerHistoriqueCategories() {
   }
 }
 
-async function sauverHistoriqueCategories(historique) {
+function sauverHistoriqueCategories(historique) {
   try {
-    await window.storage.set(
-      CATEGORY_HISTORY_KEY,
-      JSON.stringify(historique.slice(0, NB_JOURS_HISTORIQUE)),
-      true
-    );
+    localStorage.setItem(CATEGORY_HISTORY_KEY, JSON.stringify(historique.slice(0, NB_JOURS_HISTORIQUE)));
   } catch (e) {
     console.warn("Impossible de sauvegarder l'historique des catégories", e);
   }
@@ -234,17 +230,15 @@ function dateHistorique(decalage = 0) {
   ].join("-");
 }
 
-async function enregistrerGrilleDansHistorique(grille) {
+function enregistrerGrilleDansHistorique(grille) {
   if (!grille) return;
   const categories = [...grille.lignes, ...grille.colonnes];
-  let historiqueBrut = await chargerHistoriqueCategories();
-  let historique = Array.isArray(historiqueBrut) ? historiqueBrut : [];
-  
+  let historique = chargerHistoriqueCategories();
   const aujourdHui = dateHistorique(0);
   historique = historique.filter(j => j.date !== aujourdHui);
   historique.unshift({ date: aujourdHui, categories });
   historique = historique.slice(0, NB_JOURS_HISTORIQUE);
-  await sauverHistoriqueCategories(historique);
+  sauverHistoriqueCategories(historique);
 }
 
 const FAMILLES = [
@@ -391,6 +385,7 @@ function trouverGrille(pool, rng, minRep = 3, historique = []) {
     const grille = { lignes, colonnes };
     const score = scoreGrille(grille, historique);
 
+    // C'était ici l'erreur du "meilleuroScore"
     if (score > meilleurScore) {
       meilleureGrille = grille;
       meilleurScore = score; 
@@ -399,10 +394,9 @@ function trouverGrille(pool, rng, minRep = 3, historique = []) {
   return meilleureGrille;
 }
 
-async function choisirCategories() {
+function choisirCategories() {
   const aujourdHui = dateHistorique(0);
-  const historiqueBrut = await chargerHistoriqueCategories();
-  const historiqueComplet = Array.isArray(historiqueBrut) ? historiqueBrut : [];
+  const historiqueComplet = chargerHistoriqueCategories();
 
   const entreeAujourdHui = historiqueComplet.find(j => j.date === aujourdHui);
   if (entreeAujourdHui && Array.isArray(entreeAujourdHui.categories) && entreeAujourdHui.categories.length === 6) {
@@ -443,7 +437,7 @@ async function choisirCategories() {
     };
   }
 
-  await enregistrerGrilleDansHistorique(grille);
+  enregistrerGrilleDansHistorique(grille);
   return grille;
 }
 
@@ -472,7 +466,7 @@ function calculerScoreTotal() {
   return currentScore + calculerBonus();
 }
 
-async function saveGameProgress() {
+function saveGameProgress() {
   const data = {
     gridState,
     mistakes,
@@ -482,17 +476,17 @@ async function saveGameProgress() {
     isFreePlay
   };
   try {
-    await window.storage.set(STORAGE_KEY, JSON.stringify(data), false);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (e) {
     console.warn("Impossible de sauvegarder la progression", e);
   }
 }
 
-async function loadSavedGame() {
+function loadSavedGame() {
   try {
-    const res = await window.storage.get(STORAGE_KEY, false);
-    if (!res || !res.value) return false;
-    const data = JSON.parse(res.value);
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return false;
+    const data = JSON.parse(saved);
     
     gridState = data.gridState || gridState;
     mistakes = data.mistakes || 0;
@@ -591,7 +585,7 @@ function selectCell(td, r, c) {
   closeSuggestions();
 }
 
-async function checkGameOver() {
+function checkGameOver() {
   const won = gridState.every(row => row.every(cell => cell !== null));
   if (won) {
     if (isFreePlay) {
@@ -601,7 +595,7 @@ async function checkGameOver() {
       document.getElementById('hint').textContent = `Grille complétée ! (Mode sans score)`;
       document.getElementById('hint').className = 'search-hint';
       retirerBoutonAbandon();
-      await saveGameProgress();
+      saveGameProgress();
       return;
     }
 
@@ -618,7 +612,7 @@ async function checkGameOver() {
     document.getElementById('hint').className = 'search-hint';
     activateGameOverMode();
     showEndGamePopup(true);
-    await saveGameProgress();
+    saveGameProgress();
   }
 }
 
@@ -656,7 +650,7 @@ function retirerBoutonAbandon() {
   if (btn) btn.remove();
 }
 
-async function abandonnerModeLibre() {
+function abandonnerModeLibre() {
   isFreePlay = false;
   gameOver = true;
   searchEl.disabled = true;
@@ -672,7 +666,7 @@ async function abandonnerModeLibre() {
   document.getElementById('hint').className = 'search-hint';
 
   activateGameOverMode();
-  await saveGameProgress();
+  saveGameProgress();
 }
 
 const tooltip = document.getElementById('mapTooltip');
@@ -909,7 +903,7 @@ document.getElementById('btnFreePlayTrigger').addEventListener('click', () => {
   freePlayModal.classList.add('open');
 });
 
-document.getElementById('btnConfirmFreePlay').addEventListener('click', async () => {
+document.getElementById('btnConfirmFreePlay').addEventListener('click', () => {
   freePlayModal.classList.remove('open');
   isFreePlay = true;
   const existingHint = document.querySelector('.game-over-hint');
@@ -927,7 +921,7 @@ document.getElementById('btnConfirmFreePlay').addEventListener('click', async ()
   afficherBoutonAbandon();
   document.getElementById('hint').textContent = 'Mode détente actif : remplis la grille pour le plaisir !';
   document.getElementById('hint').className = 'search-hint';
-  await saveGameProgress();
+  saveGameProgress();
 });
 freePlayModal.addEventListener('click', e => { if (e.target === freePlayModal) freePlayModal.classList.remove('open'); });
 
@@ -1022,7 +1016,7 @@ function closeSuggestions() {
 // ─────────────────────────────────────────────
 // 8. VALIDATION DU TOUR
 // ─────────────────────────────────────────────
-async function submit(dep) {
+function submit(dep) {
   if (!selectedCell) return;
   const { r, c, td } = selectedCell;
   const valid = ANSWERS[r][c].includes(dep);
@@ -1049,8 +1043,8 @@ async function submit(dep) {
       : `${dep} (${info.pct}% — +${info.pts} pts) — Validé !`;
     document.getElementById('hint').className = 'search-hint';
     renderCell(td, r, c);
-    await saveGameProgress();
-    await checkGameOver();
+    saveGameProgress();
+    checkGameOver();
   } else {
     if (isFreePlay) {
       td.classList.add('wrong');
@@ -1065,7 +1059,7 @@ async function submit(dep) {
     td.classList.add('wrong');
     setTimeout(() => { td.classList.remove('wrong'); td.classList.add('selected'); }, 400);
     document.getElementById('hint').textContent = `"${dep}" n'est pas valide ici`;
-    await saveGameProgress();
+    saveGameProgress();
     if (mistakes >= MAX_MISTAKES) {
       gameOver = true;
       searchEl.disabled = true;
@@ -1076,7 +1070,7 @@ async function submit(dep) {
       document.getElementById('hint').className = 'search-hint';
       activateGameOverMode();
       showEndGamePopup(false);
-      await saveGameProgress();
+      saveGameProgress();
     }
   }
 }
@@ -1084,10 +1078,10 @@ async function submit(dep) {
 document.addEventListener('click', e => { if (!e.target.closest('.search-section')) closeSuggestions(); });
 
 // ─────────────────────────────────────────────
-// 9. INITIALISATION GLOBALE (ASYNCHRONE)
+// 9. INITIALISATION GLOBALE (SYNCHRONE COMME À L'ORIGINE)
 // ─────────────────────────────────────────────
-async function initJeu() {
-  const { lignes, colonnes } = await choisirCategories();
+function initJeu() {
+  const { lignes, colonnes } = choisirCategories();
 
   ROWS = lignes.map(id => ({ id, label: CATEGORIES.find(c => c.id === id).label }));
   COLS = colonnes.map(id => ({ id, label: CATEGORIES.find(c => c.id === id).label }));
@@ -1154,11 +1148,12 @@ async function initJeu() {
   STORAGE_KEY = 'deptdoku_' + graineDuJour() + '_' + lignes.join('') + '_' + colonnes.join('');
 
   setDateDisplay();
-  const hasPlayed = await loadSavedGame();
+  const hasPlayed = loadSavedGame();
   buildGrid();
   initMap();
   updateScoreDisplay();
 
+  // === C'EST ICI QUE LA RÉGULARISATION S'OPÈRE ===
   if (hasPlayed) {
     if (gameOver && !isFreePlay) {
       document.getElementById('rulesModal').classList.remove('open');
@@ -1178,9 +1173,11 @@ async function initJeu() {
         afficherBoutonAbandon();
       }
     } else {
+      // Partie en cours : les règles s'affichent !
       document.getElementById('rulesModal').classList.add('open');
     }
   } else {
+    // Première visite : on affiche les règles
     document.getElementById('rulesModal').classList.add('open');
   }
 }
