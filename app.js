@@ -403,6 +403,19 @@ const NB_JOURS_BANNIS = 3; // une catégorie utilisée ne peut pas revenir avant
 async function choisirCategories() {
   const tous = CATEGORIES.map(c => c.id);
   const historique = await chargerHistoriqueCategories();
+  const aujourdHui = dateHistorique(0);
+
+  // Si la grille du jour existe déjà (calculée par ce joueur ou un autre
+  // lors d'un chargement précédent aujourd'hui), on la réutilise à l'identique
+  // au lieu de la recalculer — sinon elle change à chaque refresh.
+  const dejaAujourdHui = historique.find(j => j.date === aujourdHui);
+  if (dejaAujourdHui && Array.isArray(dejaAujourdHui.categories) && dejaAujourdHui.categories.length === 6) {
+    return {
+      lignes: dejaAujourdHui.categories.slice(0, 3),
+      colonnes: dejaAujourdHui.categories.slice(3, 6)
+    };
+  }
+
   const rng = creerAleatoire(graineDuJour(0));
 
   function construireBannis(nbJours) {
@@ -416,9 +429,6 @@ async function choisirCategories() {
     return bannis;
   }
 
-  // On essaie d'abord avec la contrainte la plus stricte (3 jours),
-  // puis on la relâche progressivement (2j, 1j, 0j) seulement si
-  // aucune grille valide n'a pu être trouvée.
   let grille = null;
   for (let nbJours = NB_JOURS_BANNIS; nbJours >= 0 && !grille; nbJours--) {
     const bannis = construireBannis(nbJours);
