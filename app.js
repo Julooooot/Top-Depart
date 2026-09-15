@@ -164,7 +164,7 @@ const DEPARTEMENTS = [
   { num:"87", nom:"Haute-Vienne", region:"Nouvelle-Aquitaine", cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true, sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true, sans100villes:false, moins300Clermont:true, plus300Clermont:false, zoneL:true, zoneO:false, voteMacron2022:true, voteLepen2022:false, genreMasc:false, genreFem:true, motCarafe:false, motPichet:true, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:true, plusNordVancouver:false, clubL1L2:false, nomCompose:true, sansTiret:false, lettreR:false, lettreL:false, lettreA:true, sansLettreA:false, nomCourt:false, nomLong:true, terrestre:true, numeroPair:false, numeroImpair:true, numInf50:false, numSup50:true, axeParisLyonMarseille:false, facadeAtlantiqueManche:false, nordDeLaLoire:false, pointCulminant1000m:false } },
   { num:"88", nom:"Vosges", region:"Grand Est", cats:{ fleuve:false, montagne:true, multiple5:false, cotier:false, frontalier:false, plus4voisins:true, sup6000km2:false, inf3500km2:false, pop1M:false, pop500k:true, sans100villes:true, moins300Clermont:false, plus300Clermont:true, zoneL:false, zoneO:true, voteMacron2022:false, voteLepen2022:true, genreMasc:false, genreFem:true, motCarafe:false, motPichet:false, motCruche:true, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false, nomCompose:false, sansTiret:true, lettreR:false, lettreL:false, lettreA:false, sansLettreA:true, nomCourt:true, nomLong:false, terrestre:true, numeroPair:true, numeroImpair:false, numInf50:false, numSup50:true, axeParisLyonMarseille:false, facadeAtlantiqueManche:false, nordDeLaLoire:true, pointCulminant1000m:true } },
   { num:"89", nom:"Yonne", region:"Bourgogne-Franche-Comté", cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true, sup6000km2:true, inf3500km2:false, pop1M:false, pop500k:true, sans100villes:true, moins300Clermont:true, plus300Clermont:false, zoneL:false, zoneO:true, voteMacron2022:true, voteLepen2022:false, genreMasc:false, genreFem:true, motCarafe:true, motPichet:false, motCruche:true, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:true, nomCompose:false, sansTiret:true, lettreR:false, lettreL:false, lettreA:false, sansLettreA:true, nomCourt:true, nomLong:false, terrestre:true, numeroPair:false, numeroImpair:true, numInf50:false, numSup50:true, axeParisLyonMarseille:true, facadeAtlantiqueManche:false, nordDeLaLoire:true, pointCulminant1000m:false } },
-  { num:"90", nom:"Territoire de Belfort", region:"Bourgogne-Franche-Comté", cats:{ fleuve:false, montagne:false, multiple5:true, cotier:false, frontalier:true, plus4voisins:true, sup6000km2:false, inf3500km2:true, pop1M:false, pop500k:true, sans100villes:true, moins300Clermont:false, plus300Clermont:true, zoneL:false, zoneO:true, voteMacron2022:true, voteLepen2022:false, genreMasc:true, genreFem:false, motCarafe:false, motPichet:false, motCruche:true, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false, nomCompose:false, sansTiret:true, lettreR:true, lettreL:true, lettreA:false, sansLettreA:true, nomCourt:false, nomLong:true, terrestre:true, numeroPair:true, numeroImpair:false, numInf50:false, numSup50:true, axeParisLyonMarseille:false, facadeAtlantiqueManche:false, nordDeLaLoire:true, pointCulminant1000m:false } },
+  { num:"90", nom:"Territoire de Belfort", region:"Bourgogne-Franche-Comté", cats:{ fleuve:false, montagne:false, multiple5:true, cotier:false, frontalier:true, plus4voisins:false, sup6000km2:false, inf3500km2:true, pop1M:false, pop500k:true, sans100villes:true, moins300Clermont:false, plus300Clermont:true, zoneL:false, zoneO:true, voteMacron2022:true, voteLepen2022:false, genreMasc:true, genreFem:false, motCarafe:false, motPichet:false, motCruche:true, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false, nomCompose:false, sansTiret:true, lettreR:true, lettreL:true, lettreA:false, sansLettreA:true, nomCourt:false, nomLong:true, terrestre:true, numeroPair:true, numeroImpair:false, numInf50:false, numSup50:true, axeParisLyonMarseille:false, facadeAtlantiqueManche:false, nordDeLaLoire:true, pointCulminant1000m:false } },
   { num:"91", nom:"Essonne", region:"Île-de-France", cats:{ fleuve:false, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true, sup6000km2:false, inf3500km2:true, pop1M:true, pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true, zoneL:false, zoneO:true, voteMacron2022:true, voteLepen2022:false, genreMasc:false, genreFem:true, motCarafe:true, motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false, nomCompose:false, sansTiret:true, lettreR:false, lettreL:false, lettreA:false, sansLettreA:true, nomCourt:false, nomLong:false, terrestre:true, numeroPair:false, numeroImpair:true, numInf50:false, numSup50:true, axeParisLyonMarseille:true, facadeAtlantiqueManche:false, nordDeLaLoire:true, pointCulminant1000m:false } },
   { num:"92", nom:"Hauts-de-Seine", region:"Île-de-France", cats:{ fleuve:true, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true, sup6000km2:false, inf3500km2:true, pop1M:true, pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true, zoneL:false, zoneO:true, voteMacron2022:true, voteLepen2022:false, genreMasc:false, genreFem:true, motCarafe:true, motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:false, nomCompose:true, sansTiret:false, lettreR:false, lettreL:false, lettreA:true, sansLettreA:false, nomCourt:false, nomLong:true, terrestre:true, numeroPair:true, numeroImpair:false, numInf50:false, numSup50:true, axeParisLyonMarseille:false, facadeAtlantiqueManche:false, nordDeLaLoire:true, pointCulminant1000m:false } },
   { num:"93", nom:"Seine-Saint-Denis", region:"Île-de-France", cats:{ fleuve:true, montagne:false, multiple5:false, cotier:false, frontalier:false, plus4voisins:true, sup6000km2:false, inf3500km2:true, pop1M:true, pop500k:false, sans100villes:false, moins300Clermont:false, plus300Clermont:true, zoneL:false, zoneO:true, voteMacron2022:true, voteLepen2022:false, genreMasc:false, genreFem:true, motCarafe:true, motPichet:false, motCruche:false, motPotDeau:false, asterixVisite:false, zenith:false, plusNordVancouver:false, clubL1L2:true, nomCompose:true, sansTiret:false, lettreR:false, lettreL:false, lettreA:true, sansLettreA:false, nomCourt:false, nomLong:true, terrestre:true, numeroPair:false, numeroImpair:true, numInf50:false, numSup50:true, axeParisLyonMarseille:false, facadeAtlantiqueManche:false, nordDeLaLoire:true, pointCulminant1000m:false } },
@@ -181,11 +181,12 @@ DEPARTEMENTS.forEach(d => {
 });
 
 // ─────────────────────────────────────────────
-// 3. GÉNÉRATION INTELLIGENTE DES GRILLES
+// 2. GÉNÉRATION INTELLIGENTE DES GRILLES
 // ─────────────────────────────────────────────
 const CATEGORY_HISTORY_KEY = "deptdoku_category_history_v2";
 const NB_JOURS_HISTORIQUE = 10;
 const NB_CANDIDATS = 12000;
+const NB_JOURS_BANNIS = 3;
 
 function melanger(tableau, rng) {
   const t = [...tableau];
@@ -196,11 +197,11 @@ function melanger(tableau, rng) {
   return t;
 }
 
-function chargerHistoriqueCategories() {
+async function chargerHistoriqueCategories() {
   try {
-    const raw = localStorage.getItem(CATEGORY_HISTORY_KEY);
-    if (!raw) return [];
-    const data = JSON.parse(raw);
+    const res = await window.storage.get(CATEGORY_HISTORY_KEY, true);
+    if (!res || !res.value) return [];
+    const data = JSON.parse(res.value);
     if (!Array.isArray(data)) return [];
     return data
       .filter(j => j && typeof j.date === "string" && Array.isArray(j.categories))
@@ -211,9 +212,13 @@ function chargerHistoriqueCategories() {
   }
 }
 
-function sauverHistoriqueCategories(historique) {
+async function sauverHistoriqueCategories(historique) {
   try {
-    localStorage.setItem(CATEGORY_HISTORY_KEY, JSON.stringify(historique.slice(0, NB_JOURS_HISTORIQUE)));
+    await window.storage.set(
+      CATEGORY_HISTORY_KEY,
+      JSON.stringify(historique.slice(0, NB_JOURS_HISTORIQUE)),
+      true
+    );
   } catch (e) {
     console.warn("Impossible de sauvegarder l'historique des catégories", e);
   }
@@ -229,15 +234,17 @@ function dateHistorique(decalage = 0) {
   ].join("-");
 }
 
-function enregistrerGrilleDansHistorique(grille) {
+async function enregistrerGrilleDansHistorique(grille) {
   if (!grille) return;
   const categories = [...grille.lignes, ...grille.colonnes];
-  let historique = chargerHistoriqueCategories();
+  let historiqueBrut = await chargerHistoriqueCategories();
+  let historique = Array.isArray(historiqueBrut) ? historiqueBrut : [];
+  
   const aujourdHui = dateHistorique(0);
   historique = historique.filter(j => j.date !== aujourdHui);
   historique.unshift({ date: aujourdHui, categories });
   historique = historique.slice(0, NB_JOURS_HISTORIQUE);
-  sauverHistoriqueCategories(historique);
+  await sauverHistoriqueCategories(historique);
 }
 
 const FAMILLES = [
@@ -386,110 +393,64 @@ function trouverGrille(pool, rng, minRep = 3, historique = []) {
 
     if (score > meilleurScore) {
       meilleureGrille = grille;
-      meilleuroScore = score;
+      meilleurScore = score; 
     }
   }
   return meilleureGrille;
 }
 
-function choisirCategories() {
+async function choisirCategories() {
+  const aujourdHui = dateHistorique(0);
+  const historiqueBrut = await chargerHistoriqueCategories();
+  const historiqueComplet = Array.isArray(historiqueBrut) ? historiqueBrut : [];
+
+  const entreeAujourdHui = historiqueComplet.find(j => j.date === aujourdHui);
+  if (entreeAujourdHui && Array.isArray(entreeAujourdHui.categories) && entreeAujourdHui.categories.length === 6) {
+    return {
+      lignes: entreeAujourdHui.categories.slice(0, 3),
+      colonnes: entreeAujourdHui.categories.slice(3, 6)
+    };
+  }
+
+  const historique = historiqueComplet.filter(j => j.date !== aujourdHui);
   const tous = CATEGORIES.map(c => c.id);
-  const historique = chargerHistoriqueCategories();
-  const hier = historique.find(j => j.date === dateHistorique(1));
-  const catsHier = hier ? hier.categories : [];
-
-  const bannis = new Set();
-  catsHier.forEach(id => {
-    bannis.add(id);
-    getMembresFamille(id).forEach(m => bannis.add(m));
-  });
-
-  const poolAujourdhui = tous.filter(id => !bannis.has(id));
   const rng = creerAleatoire(graineDuJour(0));
-  let grille = trouverGrille(poolAujourdhui, rng, 3, historique);
 
-  if (!grille) {
-    grille = trouverGrille(tous, rng, 3, historique);
+  function construireBannis(nbJours) {
+    const bannis = new Set();
+    historique.slice(0, nbJours).forEach(jour => {
+      if (jour && Array.isArray(jour.categories)) {
+        jour.categories.forEach(id => {
+          bannis.add(id);
+          getMembresFamille(id).forEach(m => bannis.add(m));
+        });
+      }
+    });
+    return bannis;
+  }
+
+  let grille = null;
+  for (let nbJours = NB_JOURS_BANNIS; nbJours >= 0 && !grille; nbJours--) {
+    const bannis = construireBannis(nbJours);
+    const pool = tous.filter(id => !bannis.has(id));
+    grille = trouverGrille(pool, rng, 3, historique);
   }
 
   if (!grille) {
-    return {
+    grille = {
       lignes: ["nomCompose", "lettreR", "numeroPair"],
       colonnes: ["clubL1L2", "sans100villes", "plus4voisins"]
     };
   }
 
-  enregistrerGrilleDansHistorique(grille);
+  await enregistrerGrilleDansHistorique(grille);
   return grille;
 }
 
-const { lignes, colonnes } = choisirCategories();
-const ROWS = lignes.map(id => ({ id, label: CATEGORIES.find(c => c.id === id).label }));
-const COLS = colonnes.map(id => ({ id, label: CATEGORIES.find(c => c.id === id).label }));
-const ANSWERS = ROWS.map(r => COLS.map(c => reponsesValides(r.id, c.id)));
-const ALL_DEPS = DEPARTEMENTS.map(d => d.nom);
-
-// Calcul déterministe des pourcentages et des points par case (Somme = 100.0 %)
-const STATS = ROWS.map((r, rIdx) => COLS.map((c, cIdx) => {
-  const deps = ANSWERS[rIdx][cIdx];
-  if (deps.length === 0) return {};
-
-  const weights = {};
-  let totalW = 0;
-
-  deps.forEach(nom => {
-    const d = DEPARTEMENTS.find(item => item.nom === nom);
-    let w = 15;
-    if (d.cats.pop1M) w += 40;
-    if (!d.cats.sans100villes) w += 20;
-    if (d.cats.pop500k) w -= 8;
-
-    const pseudoRand = ((parseInt(d.num, 10) * 17 + rIdx * 31 + cIdx * 13 + graineDuJour()) % 40) / 10;
-    w = Math.max(1, w + pseudoRand);
-    weights[nom] = w;
-    totalW += w;
-  });
-
-  let distributed = 0;
-  const items = deps.map(nom => {
-    const exact = (weights[nom] / totalW) * 1000;
-    const base = Math.floor(exact);
-    const remainder = exact - base;
-    distributed += base;
-    return { nom, base, remainder };
-  });
-
-  let diff = 1000 - distributed;
-  items.sort((a, b) => b.remainder - a.remainder);
-  for (let i = 0; i < diff; i++) {
-    items[i].base += 1;
-  }
-
-  const pcts = {};
-  let minPct = 100, maxPct = 0;
-  items.forEach(item => {
-    const p = parseFloat((item.base / 10).toFixed(1));
-    pcts[item.nom] = p;
-    if (p < minPct) minPct = p;
-    if (p > maxPct) maxPct = p;
-  });
-
-  const cellData = {};
-  items.forEach(item => {
-    const p = pcts[item.nom];
-    let pts = 100;
-    if (maxPct !== minPct) {
-      pts = Math.round(100 - 80 * ((p - minPct) / (maxPct - minPct)));
-    }
-    cellData[item.nom] = { pct: p, pts: pts };
-  });
-
-  return cellData;
-}));
 // ─────────────────────────────────────────────
-// 3. ÉTAT & SAUVEGARDE QUOTIDIENNE (PARTIE UNIQUE)
+// 3. ÉTAT & SAUVEGARDE QUOTIDIENNE
 // ─────────────────────────────────────────────
-const STORAGE_KEY = 'deptdoku_' + graineDuJour();
+let ROWS, COLS, ANSWERS, ALL_DEPS, STATS, STORAGE_KEY;
 
 let gridState = Array.from({length: 3}, () => Array(3).fill(null));
 let usedAnswers = new Set();
@@ -511,7 +472,7 @@ function calculerScoreTotal() {
   return currentScore + calculerBonus();
 }
 
-function saveGameProgress() {
+async function saveGameProgress() {
   const data = {
     gridState,
     mistakes,
@@ -520,14 +481,19 @@ function saveGameProgress() {
     usedAnswers: Array.from(usedAnswers),
     isFreePlay
   };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  try {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(data), false);
+  } catch (e) {
+    console.warn("Impossible de sauvegarder la progression", e);
+  }
 }
 
-function loadSavedGame() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (!saved) return false;
+async function loadSavedGame() {
   try {
-    const data = JSON.parse(saved);
+    const res = await window.storage.get(STORAGE_KEY, false);
+    if (!res || !res.value) return false;
+    const data = JSON.parse(res.value);
+    
     gridState = data.gridState || gridState;
     mistakes = data.mistakes || 0;
     gameOver = data.gameOver || false;
@@ -625,7 +591,7 @@ function selectCell(td, r, c) {
   closeSuggestions();
 }
 
-function checkGameOver() {
+async function checkGameOver() {
   const won = gridState.every(row => row.every(cell => cell !== null));
   if (won) {
     if (isFreePlay) {
@@ -635,7 +601,7 @@ function checkGameOver() {
       document.getElementById('hint').textContent = `Grille complétée ! (Mode sans score)`;
       document.getElementById('hint').className = 'search-hint';
       retirerBoutonAbandon();
-      saveGameProgress();
+      await saveGameProgress();
       return;
     }
 
@@ -652,7 +618,7 @@ function checkGameOver() {
     document.getElementById('hint').className = 'search-hint';
     activateGameOverMode();
     showEndGamePopup(true);
-    saveGameProgress();
+    await saveGameProgress();
   }
 }
 
@@ -690,7 +656,7 @@ function retirerBoutonAbandon() {
   if (btn) btn.remove();
 }
 
-function abandonnerModeLibre() {
+async function abandonnerModeLibre() {
   isFreePlay = false;
   gameOver = true;
   searchEl.disabled = true;
@@ -706,7 +672,7 @@ function abandonnerModeLibre() {
   document.getElementById('hint').className = 'search-hint';
 
   activateGameOverMode();
-  saveGameProgress();
+  await saveGameProgress();
 }
 
 const tooltip = document.getElementById('mapTooltip');
@@ -717,7 +683,6 @@ async function initMap() {
     const geojson = await res.json();
     const svg = d3.select('#map-svg');
 
-    // Exclusion de la Corse (2A et 2B)
     const featuresSansCorse = geojson.features.filter(
       d => d.properties.code !== '2A' && d.properties.code !== '2B'
     );
@@ -851,7 +816,7 @@ function genererTextePartage() {
   const d = new Date();
   const dateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
 
-  return `Top-Départ(ement) (${dateStr})\nScore : ${finalScore}/1000 pts${bonusText} (${foundCount}/9)\nErreurs : ${mistakes}/5${rarestText}\n\n${gridVisual}`;
+  return `Départementdoku (${dateStr})\nScore : ${finalScore}/1000 pts${bonusText} (${foundCount}/9)\nErreurs : ${mistakes}/5${rarestText}\n\n${gridVisual}`;
 }
 
 document.getElementById('btnShare').addEventListener('click', async () => {
@@ -937,14 +902,14 @@ document.getElementById('btnCloseLegal').addEventListener('click', () => legalMo
 document.getElementById('btnCloseLegalCross').addEventListener('click', () => legalModal.classList.remove('open'));
 legalModal.addEventListener('click', e => { if (e.target === legalModal) legalModal.classList.remove('open'); });
 
-// Modal Mode Libre (Jouer sans score)
+// Modal Mode Libre
 const freePlayModal = document.getElementById('freePlayModal');
 document.getElementById('btnFreePlayTrigger').addEventListener('click', () => {
   document.getElementById('endGameModal').classList.remove('open');
   freePlayModal.classList.add('open');
 });
 
-document.getElementById('btnConfirmFreePlay').addEventListener('click', () => {
+document.getElementById('btnConfirmFreePlay').addEventListener('click', async () => {
   freePlayModal.classList.remove('open');
   isFreePlay = true;
   const existingHint = document.querySelector('.game-over-hint');
@@ -962,7 +927,7 @@ document.getElementById('btnConfirmFreePlay').addEventListener('click', () => {
   afficherBoutonAbandon();
   document.getElementById('hint').textContent = 'Mode détente actif : remplis la grille pour le plaisir !';
   document.getElementById('hint').className = 'search-hint';
-  saveGameProgress();
+  await saveGameProgress();
 });
 freePlayModal.addEventListener('click', e => { if (e.target === freePlayModal) freePlayModal.classList.remove('open'); });
 
@@ -1057,7 +1022,7 @@ function closeSuggestions() {
 // ─────────────────────────────────────────────
 // 8. VALIDATION DU TOUR
 // ─────────────────────────────────────────────
-function submit(dep) {
+async function submit(dep) {
   if (!selectedCell) return;
   const { r, c, td } = selectedCell;
   const valid = ANSWERS[r][c].includes(dep);
@@ -1084,8 +1049,8 @@ function submit(dep) {
       : `${dep} (${info.pct}% — +${info.pts} pts) — Validé !`;
     document.getElementById('hint').className = 'search-hint';
     renderCell(td, r, c);
-    saveGameProgress();
-    checkGameOver();
+    await saveGameProgress();
+    await checkGameOver();
   } else {
     if (isFreePlay) {
       td.classList.add('wrong');
@@ -1100,7 +1065,7 @@ function submit(dep) {
     td.classList.add('wrong');
     setTimeout(() => { td.classList.remove('wrong'); td.classList.add('selected'); }, 400);
     document.getElementById('hint').textContent = `"${dep}" n'est pas valide ici`;
-    saveGameProgress();
+    await saveGameProgress();
     if (mistakes >= MAX_MISTAKES) {
       gameOver = true;
       searchEl.disabled = true;
@@ -1111,7 +1076,7 @@ function submit(dep) {
       document.getElementById('hint').className = 'search-hint';
       activateGameOverMode();
       showEndGamePopup(false);
-      saveGameProgress();
+      await saveGameProgress();
     }
   }
 }
@@ -1119,30 +1084,105 @@ function submit(dep) {
 document.addEventListener('click', e => { if (!e.target.closest('.search-section')) closeSuggestions(); });
 
 // ─────────────────────────────────────────────
-// INITIALISATION GLOBALE
+// 9. INITIALISATION GLOBALE (ASYNCHRONE)
 // ─────────────────────────────────────────────
-setDateDisplay();
-const hasPlayed = loadSavedGame();
-buildGrid();
-initMap();
-updateScoreDisplay();
+async function initJeu() {
+  const { lignes, colonnes } = await choisirCategories();
 
-if (hasPlayed) {
-  document.getElementById('rulesModal').classList.remove('open');
-  if (gameOver && !isFreePlay) {
-    searchEl.disabled = true;
-    searchEl.placeholder = 'Tapez au moins 3 lettres…';
-    const isWon = gridState.every(row => row.every(cell => cell !== null));
-    document.getElementById('hint').textContent = `Partie terminée (${calculerScoreTotal()} pts) — Clique sur une case pour voir les réponses`;
-    activateGameOverMode();
-    showEndGamePopup(isWon);
-  } else if (isFreePlay) {
-    const isFull = gridState.every(row => row.every(cell => cell !== null));
-    if (isFull) {
-      document.getElementById('hint').textContent = 'Grille complétée ! (Mode sans score)';
-    } else {
-      document.getElementById('hint').textContent = 'Mode détente actif : remplis la grille pour le plaisir !';
-      afficherBoutonAbandon();
+  ROWS = lignes.map(id => ({ id, label: CATEGORIES.find(c => c.id === id).label }));
+  COLS = colonnes.map(id => ({ id, label: CATEGORIES.find(c => c.id === id).label }));
+  ANSWERS = ROWS.map(r => COLS.map(c => reponsesValides(r.id, c.id)));
+  ALL_DEPS = DEPARTEMENTS.map(d => d.nom);
+
+  STATS = ROWS.map((r, rIdx) => COLS.map((c, cIdx) => {
+    const deps = ANSWERS[rIdx][cIdx];
+    if (deps.length === 0) return {};
+
+    const weights = {};
+    let totalW = 0;
+
+    deps.forEach(nom => {
+      const d = DEPARTEMENTS.find(item => item.nom === nom);
+      let w = 15;
+      if (d.cats.pop1M) w += 40;
+      if (!d.cats.sans100villes) w += 20;
+      if (d.cats.pop500k) w -= 8;
+
+      const pseudoRand = ((parseInt(d.num, 10) * 17 + rIdx * 31 + cIdx * 13 + graineDuJour()) % 40) / 10;
+      w = Math.max(1, w + pseudoRand);
+      weights[nom] = w;
+      totalW += w;
+    });
+
+    let distributed = 0;
+    const items = deps.map(nom => {
+      const exact = (weights[nom] / totalW) * 1000;
+      const base = Math.floor(exact);
+      const remainder = exact - base;
+      distributed += base;
+      return { nom, base, remainder };
+    });
+
+    let diff = 1000 - distributed;
+    items.sort((a, b) => b.remainder - a.remainder);
+    for (let i = 0; i < diff; i++) {
+      items[i].base += 1;
     }
+
+    const pcts = {};
+    let minPct = 100, maxPct = 0;
+    items.forEach(item => {
+      const p = parseFloat((item.base / 10).toFixed(1));
+      pcts[item.nom] = p;
+      if (p < minPct) minPct = p;
+      if (p > maxPct) maxPct = p;
+    });
+
+    const cellData = {};
+    items.forEach(item => {
+      const p = pcts[item.nom];
+      let pts = 100;
+      if (maxPct !== minPct) {
+        pts = Math.round(100 - 80 * ((p - minPct) / (maxPct - minPct)));
+      }
+      cellData[item.nom] = { pct: p, pts: pts };
+    });
+
+    return cellData;
+  }));
+
+  STORAGE_KEY = 'deptdoku_' + graineDuJour() + '_' + lignes.join('') + '_' + colonnes.join('');
+
+  setDateDisplay();
+  const hasPlayed = await loadSavedGame();
+  buildGrid();
+  initMap();
+  updateScoreDisplay();
+
+  if (hasPlayed) {
+    if (gameOver && !isFreePlay) {
+      document.getElementById('rulesModal').classList.remove('open');
+      searchEl.disabled = true;
+      searchEl.placeholder = 'Tapez au moins 3 lettres…';
+      const isWon = gridState.every(row => row.every(cell => cell !== null));
+      document.getElementById('hint').textContent = `Partie terminée (${calculerScoreTotal()} pts) — Clique sur une case pour voir les réponses`;
+      activateGameOverMode();
+      showEndGamePopup(isWon);
+    } else if (isFreePlay) {
+      document.getElementById('rulesModal').classList.remove('open');
+      const isFull = gridState.every(row => row.every(cell => cell !== null));
+      if (isFull) {
+        document.getElementById('hint').textContent = 'Grille complétée ! (Mode sans score)';
+      } else {
+        document.getElementById('hint').textContent = 'Mode détente actif : remplis la grille pour le plaisir !';
+        afficherBoutonAbandon();
+      }
+    } else {
+      document.getElementById('rulesModal').classList.add('open');
+    }
+  } else {
+    document.getElementById('rulesModal').classList.add('open');
   }
 }
+
+initJeu();
