@@ -1155,8 +1155,7 @@ async function initJeu() {
     return cellData;
   }));
 
-  // La clé de sauvegarde perso inclut désormais les catégories du jour,
-  // pour éviter tout conflit si jamais deux grilles différentes existaient un même jour.
+  // La clé de sauvegarde perso inclut désormais les catégories du jour...
   STORAGE_KEY = 'deptdoku_' + graineDuJour() + '_' + lignes.join('') + '_' + colonnes.join('');
 
   setDateDisplay();
@@ -1165,9 +1164,11 @@ async function initJeu() {
   initMap();
   updateScoreDisplay();
 
+  // === C'EST ICI QUE LA REDISTRIBUTION S'OPÈRE ===
   if (hasPlayed) {
-    document.getElementById('rulesModal').classList.remove('open');
     if (gameOver && !isFreePlay) {
+      // Partie terminée : on ferme les règles et on montre le bilan
+      document.getElementById('rulesModal').classList.remove('open');
       searchEl.disabled = true;
       searchEl.placeholder = 'Tapez au moins 3 lettres…';
       const isWon = gridState.every(row => row.every(cell => cell !== null));
@@ -1175,6 +1176,8 @@ async function initJeu() {
       activateGameOverMode();
       showEndGamePopup(isWon);
     } else if (isFreePlay) {
+      // Mode libre : on ferme les règles pour jouer tranquillement
+      document.getElementById('rulesModal').classList.remove('open');
       const isFull = gridState.every(row => row.every(cell => cell !== null));
       if (isFull) {
         document.getElementById('hint').textContent = 'Grille complétée ! (Mode sans score)';
@@ -1182,7 +1185,13 @@ async function initJeu() {
         document.getElementById('hint').textContent = 'Mode détente actif : remplis la grille pour le plaisir !';
         afficherBoutonAbandon();
       }
+    } else {
+      // LA LUTTE CONTINUE : La partie est en cours, on réaffiche les règles !
+      document.getElementById('rulesModal').classList.add('open');
     }
+  } else {
+    // Toute première visite du joueur
+    document.getElementById('rulesModal').classList.add('open');
   }
 }
 
