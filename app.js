@@ -1154,8 +1154,9 @@ function initJeu() {
   updateScoreDisplay();
 
   // === C'EST ICI QUE LA RÉGULARISATION S'OPÈRE ===
-  if (hasPlayed) {
+if (hasPlayed) {
     if (gameOver && !isFreePlay) {
+      // Le combat est terminé : on cache les règles et on donne le bilan
       document.getElementById('rulesModal').classList.remove('open');
       searchEl.disabled = true;
       searchEl.placeholder = 'Tapez au moins 3 lettres…';
@@ -1164,6 +1165,7 @@ function initJeu() {
       activateGameOverMode();
       showEndGamePopup(isWon);
     } else if (isFreePlay) {
+      // Mode détente
       document.getElementById('rulesModal').classList.remove('open');
       const isFull = gridState.every(row => row.every(cell => cell !== null));
       if (isFull) {
@@ -1173,11 +1175,11 @@ function initJeu() {
         afficherBoutonAbandon();
       }
     } else {
-      // Partie en cours : les règles s'affichent !
+      // LA LUTTE CONTINUE : la partie est en cours, on (ré)affiche les règles !
       document.getElementById('rulesModal').classList.add('open');
     }
   } else {
-    // Première visite : on affiche les règles
+    // Toute nouvelle partie (nouveau joueur ou premier essai)
     document.getElementById('rulesModal').classList.add('open');
   }
 }
