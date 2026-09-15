@@ -401,8 +401,24 @@ function trouverGrille(pool, rng, minRep = 3, historique = []) {
 const NB_JOURS_BANNIS = 3; // une catégorie utilisée ne peut pas revenir avant ce nombre de jours
 
 async function choisirCategories() {
+  const aujourdHui = dateHistorique(0);
+  const historiqueComplet = await chargerHistoriqueCategories();
+
+  // Si une grille existe déjà pour AUJOURD'HUI (ex: rechargement de page),
+  // on la réutilise telle quelle. Sinon elle influencerait son propre calcul
+  // (c'était ça, le bug qui permettait de "rejouer" en actualisant).
+  const entreeAujourdHui = historiqueComplet.find(j => j.date === aujourdHui);
+  if (entreeAujourdHui && Array.isArray(entreeAujourdHui.categories) && entreeAujourdHui.categories.length === 6) {
+    return {
+      lignes: entreeAujourdHui.categories.slice(0, 3),
+      colonnes: entreeAujourdHui.categories.slice(3, 6)
+    };
+  }
+
+  // Sinon, première génération du jour : on calcule une nouvelle grille
+  // en se basant UNIQUEMENT sur les jours précédents (jamais sur aujourd'hui).
+  const historique = historiqueComplet.filter(j => j.date !== aujourdHui);
   const tous = CATEGORIES.map(c => c.id);
-  const historique = await chargerHistoriqueCategories();
   const rng = creerAleatoire(graineDuJour(0));
 
   function construireBannis(nbJours) {
@@ -416,9 +432,6 @@ async function choisirCategories() {
     return bannis;
   }
 
-  // On essaie d'abord avec la contrainte la plus stricte (3 jours),
-  // puis on la relâche progressivement (2j, 1j, 0j) seulement si
-  // aucune grille valide n'a pu être trouvée.
   let grille = null;
   for (let nbJours = NB_JOURS_BANNIS; nbJours >= 0 && !grille; nbJours--) {
     const bannis = construireBannis(nbJours);
