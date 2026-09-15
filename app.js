@@ -402,11 +402,13 @@ const NB_JOURS_BANNIS = 3; // une catégorie utilisée ne peut pas revenir avant
 
 async function choisirCategories() {
   const aujourdHui = dateHistorique(0);
-  const historiqueComplet = await chargerHistoriqueCategories();
-
+  
+  // 1. Sécurité sociale : on s'assure d'avoir toujours un tableau, même si la sauvegarde fait défaut
+  const historiqueBrut = await chargerHistoriqueCategories();
+  const historiqueComplet = Array.isArray(historiqueBrut) ? historiqueBrut : [];
+  
   // Si une grille existe déjà pour AUJOURD'HUI (ex: rechargement de page),
-  // on la réutilise telle quelle. Sinon elle influencerait son propre calcul
-  // (c'était ça, le bug qui permettait de "rejouer" en actualisant).
+  // on la réutilise telle quelle.
   const entreeAujourdHui = historiqueComplet.find(j => j.date === aujourdHui);
   if (entreeAujourdHui && Array.isArray(entreeAujourdHui.categories) && entreeAujourdHui.categories.length === 6) {
     return {
@@ -414,38 +416,45 @@ async function choisirCategories() {
       colonnes: entreeAujourdHui.categories.slice(3, 6)
     };
   }
-
+  
   // Sinon, première génération du jour : on calcule une nouvelle grille
-  // en se basant UNIQUEMENT sur les jours précédents (jamais sur aujourd'hui).
+  // en se basant UNIQUEMENT sur les jours précédents.
   const historique = historiqueComplet.filter(j => j.date !== aujourdHui);
   const tous = CATEGORIES.map(c => c.id);
   const rng = creerAleatoire(graineDuJour(0));
-
+  
   function construireBannis(nbJours) {
     const bannis = new Set();
     historique.slice(0, nbJours).forEach(jour => {
-      jour.categories.forEach(id => {
-        bannis.add(id);
-        getMembresFamille(id).forEach(m => bannis.add(m));
-      });
+      // Protection supplémentaire pour éviter les erreurs "undefined"
+      if (jour && Array.isArray(jour.categories)) {
+        jour.categories.forEach(id => {
+          bannis.add(id);
+          getMembresFamille(id).forEach(m => bannis.add(m));
+        });
+      }
     });
     return bannis;
   }
-
+  
+  // 2. LA CAUSE DU BUG : il manquait la définition de la limite !
+  const NB_JOURS_BANNIS = 3; 
+  
   let grille = null;
   for (let nbJours = NB_JOURS_BANNIS; nbJours >= 0 && !grille; nbJours--) {
     const bannis = construireBannis(nbJours);
     const pool = tous.filter(id => !bannis.has(id));
     grille = trouverGrille(pool, rng, 3, historique);
   }
-
+  
+  // Filet de sauvetage au cas où la fonction ne trouve rien
   if (!grille) {
     grille = {
       lignes: ["nomCompose", "lettreR", "numeroPair"],
       colonnes: ["clubL1L2", "sans100villes", "plus4voisins"]
     };
   }
-
+  
   await enregistrerGrilleDansHistorique(grille);
   return grille;
 }
