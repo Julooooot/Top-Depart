@@ -403,19 +403,6 @@ const NB_JOURS_BANNIS = 3; // une catégorie utilisée ne peut pas revenir avant
 async function choisirCategories() {
   const tous = CATEGORIES.map(c => c.id);
   const historique = await chargerHistoriqueCategories();
-  const aujourdHui = dateHistorique(0);
-
-  // Si la grille du jour existe déjà (calculée par ce joueur ou un autre
-  // lors d'un chargement précédent aujourd'hui), on la réutilise à l'identique
-  // au lieu de la recalculer — sinon elle change à chaque refresh.
-  const dejaAujourdHui = historique.find(j => j.date === aujourdHui);
-  if (dejaAujourdHui && Array.isArray(dejaAujourdHui.categories) && dejaAujourdHui.categories.length === 6) {
-    return {
-      lignes: dejaAujourdHui.categories.slice(0, 3),
-      colonnes: dejaAujourdHui.categories.slice(3, 6)
-    };
-  }
-
   const rng = creerAleatoire(graineDuJour(0));
 
   function construireBannis(nbJours) {
@@ -429,6 +416,9 @@ async function choisirCategories() {
     return bannis;
   }
 
+  // On essaie d'abord avec la contrainte la plus stricte (3 jours),
+  // puis on la relâche progressivement (2j, 1j, 0j) seulement si
+  // aucune grille valide n'a pu être trouvée.
   let grille = null;
   for (let nbJours = NB_JOURS_BANNIS; nbJours >= 0 && !grille; nbJours--) {
     const bannis = construireBannis(nbJours);
@@ -474,7 +464,7 @@ function calculerScoreTotal() {
   return currentScore + calculerBonus();
 }
 
-async function saveGameProgress() {
+function saveGameProgress() {
   const data = {
     gridState,
     mistakes,
@@ -483,18 +473,14 @@ async function saveGameProgress() {
     usedAnswers: Array.from(usedAnswers),
     isFreePlay
   };
-  try {
-    await window.storage.set(STORAGE_KEY, JSON.stringify(data), false); // shared = false (personnel)
-  } catch (e) {
-    console.warn("Impossible de sauvegarder la progression", e);
-  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
-async function loadSavedGame() {
+function loadSavedGame() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) return false;
   try {
-    const res = await window.storage.get(STORAGE_KEY, false);
-    if (!res || !res.value) return false;
-    const data = JSON.parse(res.value);
+    const data = JSON.parse(saved);
     gridState = data.gridState || gridState;
     mistakes = data.mistakes || 0;
     gameOver = data.gameOver || false;
@@ -509,7 +495,7 @@ async function loadSavedGame() {
     updateScoreDisplay();
     return true;
   } catch (e) {
-    return false; // pas de partie sauvegardée pour cette clé
+    return false;
   }
 }
 
@@ -1155,20 +1141,19 @@ async function initJeu() {
     return cellData;
   }));
 
-  // La clé de sauvegarde perso inclut désormais les catégories du jour...
+  // La clé de sauvegarde perso inclut désormais les catégories du jour,
+  // pour éviter tout conflit si jamais deux grilles différentes existaient un même jour.
   STORAGE_KEY = 'deptdoku_' + graineDuJour() + '_' + lignes.join('') + '_' + colonnes.join('');
 
   setDateDisplay();
-  const hasPlayed = await loadSavedGame();
+  const hasPlayed =  loadSavedGame();
   buildGrid();
   initMap();
   updateScoreDisplay();
 
-  // === C'EST ICI QUE LA REDISTRIBUTION S'OPÈRE ===
   if (hasPlayed) {
+    document.getElementById('rulesModal').classList.remove('open');
     if (gameOver && !isFreePlay) {
-      // Partie terminée : on ferme les règles et on montre le bilan
-      document.getElementById('rulesModal').classList.remove('open');
       searchEl.disabled = true;
       searchEl.placeholder = 'Tapez au moins 3 lettres…';
       const isWon = gridState.every(row => row.every(cell => cell !== null));
@@ -1176,8 +1161,6 @@ async function initJeu() {
       activateGameOverMode();
       showEndGamePopup(isWon);
     } else if (isFreePlay) {
-      // Mode libre : on ferme les règles pour jouer tranquillement
-      document.getElementById('rulesModal').classList.remove('open');
       const isFull = gridState.every(row => row.every(cell => cell !== null));
       if (isFull) {
         document.getElementById('hint').textContent = 'Grille complétée ! (Mode sans score)';
@@ -1185,13 +1168,7 @@ async function initJeu() {
         document.getElementById('hint').textContent = 'Mode détente actif : remplis la grille pour le plaisir !';
         afficherBoutonAbandon();
       }
-    } else {
-      // LA LUTTE CONTINUE : La partie est en cours, on réaffiche les règles !
-      document.getElementById('rulesModal').classList.add('open');
     }
-  } else {
-    // Toute première visite du joueur
-    document.getElementById('rulesModal').classList.add('open');
   }
 }
 
