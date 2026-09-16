@@ -181,7 +181,7 @@
     justify-content: center;
     gap: 2.5rem;
     width: 100%;
-    max-width: 1200px;
+    max-width: 1500px;
   }
 
   .left-pane {
@@ -193,20 +193,16 @@
     flex-shrink: 0;
   }
 
-  .right-pane {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 530px;
-    height: 530px;
-    flex-shrink: 0;
-    background: #fff;
-    border-radius: 20px;
-    padding: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    border: 1px solid #e2e8f0;
-  }
+  .lb-pane {
+  width: 260px;
+  flex-shrink: 0;
+  background: #fff;
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  border: 1px solid #e2e8f0;
+  align-self: flex-start;
+}
 
   /* ── GRILLE ── */
   .grid-wrap {
