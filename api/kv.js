@@ -21,7 +21,13 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      const value = await redis.get(`kv:${cle}`);
+      let value = await redis.get(`kv:${cle}`);
+      // Upstash désérialise automatiquement les chaînes JSON qu'il détecte,
+      // ce qui casse le contrat "value est toujours une chaîne" attendu côté
+      // client. On re-sérialise si besoin pour rester cohérent.
+      if (value !== null && value !== undefined && typeof value !== 'string') {
+        value = JSON.stringify(value);
+      }
       return res.status(200).json({ key: cle, value: value ?? null });
     }
 
