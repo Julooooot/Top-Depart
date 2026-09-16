@@ -228,11 +228,10 @@ async function sauverHistoriqueCategories(historique) {
 function dateHistorique(decalage = 0) {
   const d = new Date();
   if (decalage !== 0) d.setDate(d.getDate() - decalage);
-  return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, "0"),
-    String(d.getDate()).padStart(2, "0")
-  ].join("-");
+  return new Intl.DateTimeFormat('fr-CA', {
+    timeZone: 'Europe/Paris',
+    year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(d);
 }
 
 async function enregistrerGrilleDansHistorique(grille) {
@@ -361,9 +360,8 @@ function verifierGrilleValide(lignes, colonnes, minRep = 3) {
 }
 
 function graineDuJour(decalage = 0) {
-  const d = new Date();
-  if (decalage !== 0) d.setDate(d.getDate() - decalage);
-  return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  const [a, m, j] = dateHistorique(decalage).split('-').map(Number);
+  return a * 10000 + m * 100 + j;
 }
 
 function creerAleatoire(graine) {
@@ -403,11 +401,22 @@ const NB_JOURS_BANNIS = 3; // une catégorie utilisée ne peut pas revenir avant
 async function choisirCategories() {
   const tous = CATEGORIES.map(c => c.id);
   const historique = await chargerHistoriqueCategories();
+  const aujourdHui = dateHistorique(0);
+
+  const dejaFaite = historique.find(j => j.date === aujourdHui);
+  if (dejaFaite && dejaFaite.categories.length === 6) {
+    return {
+      lignes:   dejaFaite.categories.slice(0, 3),
+      colonnes: dejaFaite.categories.slice(3, 6)
+    };
+  }
+
+  const passe = historique.filter(j => j.date !== aujourdHui);
   const rng = creerAleatoire(graineDuJour(0));
 
   function construireBannis(nbJours) {
     const bannis = new Set();
-    historique.slice(0, nbJours).forEach(jour => {
+    passe.slice(0, nbJours).forEach(jour => {
       jour.categories.forEach(id => {
         bannis.add(id);
         getMembresFamille(id).forEach(m => bannis.add(m));
@@ -416,19 +425,15 @@ async function choisirCategories() {
     return bannis;
   }
 
-  // On essaie d'abord avec la contrainte la plus stricte (3 jours),
-  // puis on la relâche progressivement (2j, 1j, 0j) seulement si
-  // aucune grille valide n'a pu être trouvée.
   let grille = null;
   for (let nbJours = NB_JOURS_BANNIS; nbJours >= 0 && !grille; nbJours--) {
-    const bannis = construireBannis(nbJours);
-    const pool = tous.filter(id => !bannis.has(id));
-    grille = trouverGrille(pool, rng, 3, historique);
+    const pool = tous.filter(id => !construireBannis(nbJours).has(id));
+    grille = trouverGrille(pool, rng, 3, passe);
   }
 
   if (!grille) {
     grille = {
-      lignes: ["nomCompose", "lettreR", "numeroPair"],
+      lignes:   ["nomCompose", "lettreR", "numeroPair"],
       colonnes: ["clubL1L2", "sans100villes", "plus4voisins"]
     };
   }
@@ -609,7 +614,8 @@ async function checkGameOver() {
     document.getElementById('hint').className = 'search-hint';
     activateGameOverMode();
     showEndGamePopup(true);
-    await saveGameProgress();
+    await saveGameProgress()
+    await envoyerScore();
   }
 }
 
@@ -1068,7 +1074,8 @@ async function submit(dep) {
       document.getElementById('hint').className = 'search-hint';
       activateGameOverMode();
       showEndGamePopup(false);
-      await saveGameProgress();
+      await saveGameProgress()
+      await envoyerScore();
     }
   }
 }
