@@ -77,7 +77,7 @@
 
   // ── 3. Envoi du score ────────────────────────────────────────
 
-  let dejaEnvoye = false;
+  let pseudoEnCoursDeDemande = false;
   let refusePourCetteSession = false;
 
   function demanderPseudo() {
@@ -114,19 +114,36 @@
     });
   }
 
-  async function envoyerScore() {
-    if (dejaEnvoye) return;
+  /**
+   * Envoie le score courant. Appelable plusieurs fois dans une même partie
+   * (fin de partie automatique, ou clic manuel avant la fin) : le serveur ne
+   * garde de toute façon que le meilleur score du joueur (voir api/leaderboard.js).
+   *
+   * @param {boolean} manuel - true si déclenché par le bouton, pour afficher
+   *   un message si le joueur n'a encore rien trouvé.
+   */
+  async function envoyerScore(manuel = false) {
     if (refusePourCetteSession) return;
     if (typeof isFreePlay !== 'undefined' && isFreePlay) return;
     if (typeof gridState === 'undefined') return;
 
-    let nom = pseudo();
-    if (!nom) {
-      nom = await demanderPseudo();
-      if (!nom) return;
+    const trouvees = gridState.flat().filter(Boolean).length;
+    if (trouvees === 0) {
+      if (manuel) {
+        const hint = document.getElementById('hint');
+        if (hint) hint.textContent = 'Trouve au moins un département avant d\'enregistrer ton score.';
+      }
+      return;
     }
 
-    const trouvees = gridState.flat().filter(Boolean).length;
+    let nom = pseudo();
+    if (!nom) {
+      if (pseudoEnCoursDeDemande) return; // popup déjà ouverte, on n'en relance pas une deuxième
+      pseudoEnCoursDeDemande = true;
+      nom = await demanderPseudo();
+      pseudoEnCoursDeDemande = false;
+      if (!nom) return;
+    }
 
     try {
       const r = await fetch(API_LB, {
@@ -141,7 +158,6 @@
         })
       });
       if (!r.ok) throw new Error(await r.text());
-      dejaEnvoye = true;
       rendreClassement(await r.json());
     } catch (e) {
       console.warn('Score non enregistré', e);
@@ -251,5 +267,9 @@
   window.afficherClassement = afficherClassement;
   window.definirPseudo = definirPseudo;
 
-  document.addEventListener('DOMContentLoaded', afficherClassement);
+  document.addEventListener('DOMContentLoaded', () => {
+    afficherClassement();
+    const btn = document.getElementById('btnEnregistrerScore');
+    if (btn) btn.addEventListener('click', () => envoyerScore(true));
+  });
 })();

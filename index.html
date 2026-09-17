@@ -40,7 +40,12 @@
   <span class="score-val" id="totalScore">0</span>
   <span>/ 1000</span>
 </div>
-
+<div class="score-badge">
+  <span>Score total :</span>
+  <span class="score-val" id="totalScore">0</span>
+  <span>/ 1000</span>
+</div>
+<button class="btn-secondary" id="btnEnregistrerScore" style="display:block; margin: 10px auto;">Enregistrer mon score au classement</button>
 
 <div class="search-section">
   <div class="search-bar">
@@ -205,6 +210,20 @@
       <p>Vous pouvez maintenant continuer à remplir les cases restantes pour le plaisir : les nouvelles réponses ne rapporteront <strong>aucun point</strong> et les erreurs ne seront <strong>plus comptabilisées</strong>.</p>
     </div>
     <button class="btn-start" id="btnConfirmFreePlay">Jouer sans score</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pseudoModal">
+  <div class="modal" style="text-align: center;">
+    <div class="modal-title">Rejoindre le classement</div>
+    <div class="rules-content">
+      <p>Choisis un pseudo pour apparaître dans le classement du jour.</p>
+    </div>
+    <input type="text" id="pseudoInput" maxlength="20" placeholder="Ton pseudo">
+    <div class="modal-btns">
+      <button class="btn-start" id="btnConfirmPseudo">Valider</button>
+      <button class="btn-secondary" id="btnSkipPseudo">Ne pas participer</button>
+    </div>
   </div>
 </div>
 
