@@ -78,18 +78,51 @@
   // ── 3. Envoi du score ────────────────────────────────────────
 
   let dejaEnvoye = false;
+  let refusePourCetteSession = false;
+
+  function demanderPseudo() {
+    return new Promise(resolve => {
+      const modal = document.getElementById('pseudoModal');
+      const input = document.getElementById('pseudoInput');
+      const btnValider = document.getElementById('btnConfirmPseudo');
+      const btnSkip = document.getElementById('btnSkipPseudo');
+
+      if (!modal || !input || !btnValider || !btnSkip) {
+        // Filet de sécurité si le HTML de la popup n'a pas été ajouté.
+        resolve(definirPseudo(window.prompt('Ton pseudo pour le classement ?') || ''));
+        return;
+      }
+
+      input.value = '';
+      modal.classList.add('open');
+      input.focus();
+
+      function conclure(valeur) {
+        modal.classList.remove('open');
+        btnValider.removeEventListener('click', onValider);
+        btnSkip.removeEventListener('click', onSkip);
+        input.removeEventListener('keydown', onKeydown);
+        resolve(valeur);
+      }
+      function onValider() { conclure(definirPseudo(input.value)); }
+      function onSkip() { refusePourCetteSession = true; conclure(''); }
+      function onKeydown(e) { if (e.key === 'Enter') onValider(); }
+
+      btnValider.addEventListener('click', onValider);
+      btnSkip.addEventListener('click', onSkip);
+      input.addEventListener('keydown', onKeydown);
+    });
+  }
 
   async function envoyerScore() {
     if (dejaEnvoye) return;
+    if (refusePourCetteSession) return;
     if (typeof isFreePlay !== 'undefined' && isFreePlay) return;
     if (typeof gridState === 'undefined') return;
 
     let nom = pseudo();
     if (!nom) {
-      nom = definirPseudo(window.prompt(
-        'Sous quel nom veux-tu apparaître au classement du jour ?\n' +
-        '(laisse vide pour ne pas participer)'
-      ));
+      nom = await demanderPseudo();
       if (!nom) return;
     }
 
@@ -196,6 +229,19 @@
     .lb-moi { background: rgba(0,0,0,.05); }
     .lb-perso, .lb-total, .lb-vide { margin: 8px 0 0; color: rgba(0,0,0,.55); }
     .lb-total { font-size: 12px; }
+
+    #pseudoInput {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 14px;
+      margin: 14px 0;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: inherit;
+    }
+    #pseudoInput:focus { outline: none; border-color: #94a3b8; }
+    #pseudoModal .modal-btns { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
   `;
   document.head.appendChild(style);
 
